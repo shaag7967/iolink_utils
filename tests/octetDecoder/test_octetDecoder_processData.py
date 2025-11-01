@@ -90,8 +90,8 @@ def test_decoder_ConditionalProcessDataDevice():
                'name': ('TN_PO_PDout2', 'PD Output - Set 2')}}}
     :return:
     """
-    test_dir = Path(__file__).parent
-    my_iodd = Iodd(str(test_dir.joinpath('IODDViewer1.4_Examples/IO-Link-22-ConditionalProcessDataDevice-20211215-IODD1.1.xml')))
+    test_dir = Path(__file__).parent.parent
+    my_iodd = Iodd(str(test_dir.joinpath('iodd/IODDViewer1.4_Examples/IO-Link-22-ConditionalProcessDataDevice-20211215-IODD1.1.xml')))
 
     ###
     # condition 0
