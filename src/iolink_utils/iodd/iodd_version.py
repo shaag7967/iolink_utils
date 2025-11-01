@@ -4,7 +4,7 @@ from functools import total_ordering
 
 @total_ordering
 class Version:
-    VERSION_PATTERN = re.compile(r"^V?(\d+(?:\.\d+){1,7})$")
+    VERSION_PATTERN = re.compile(r"^V?(\d+(?:\.\d+){0,4})$")
 
     def __init__(self, version_str: str = '0.0.0.0'):
         match = self.VERSION_PATTERN.match(version_str)
