@@ -118,17 +118,17 @@ def test_decoder_ConditionalProcessDataDevice():
             'TN_PI_X_PDin_StatusSig1'] == list(decoder.field_names) #  checks attributes
     assert decoder.TN_PI_X_PDin_DetectionValue == 0
     assert decoder.TN_V_PD_CounterValue == 0
-    assert decoder.TN_PI_X_PDin_StatusSig2 is False
-    assert decoder.TN_PI_X_PDin_StatusSig1 is False
+    assert decoder.TN_PI_X_PDin_StatusSig2 == 0
+    assert decoder.TN_PI_X_PDin_StatusSig1 == 0
 
     decoder = PDInDecoder_2.from_buffer_copy(b'\x00\x01\x05\x01')
     assert decoder.TN_PI_X_PDin_DetectionValue == 1
     assert decoder.TN_V_PD_CounterValue == 5
-    assert decoder.TN_PI_X_PDin_StatusSig2 is False
-    assert decoder.TN_PI_X_PDin_StatusSig1 is True
+    assert decoder.TN_PI_X_PDin_StatusSig2 == 0
+    assert decoder.TN_PI_X_PDin_StatusSig1 == 1
 
     decoder = PDInDecoder_2.from_buffer_copy(b'\x00\x03\x02\x02')
     assert decoder.TN_PI_X_PDin_DetectionValue == 3
     assert decoder.TN_V_PD_CounterValue == 2
-    assert decoder.TN_PI_X_PDin_StatusSig2 is True
-    assert decoder.TN_PI_X_PDin_StatusSig1 is False
+    assert decoder.TN_PI_X_PDin_StatusSig2 == 1
+    assert decoder.TN_PI_X_PDin_StatusSig1 == 0
