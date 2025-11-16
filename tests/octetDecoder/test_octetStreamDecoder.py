@@ -11,6 +11,8 @@ from iolink_utils.octetDecoder.octetStreamDecoder import OctetStreamDecoder, Dec
 from iolink_utils.octetDecoder.octetStreamDecoderSettings import MSeqPayloadLength
 from iolink_utils.definitions.bitRate import BitRate
 
+from iolink_utils.messageInterpreter.messageInterpreter import MessageInterpreter
+
 
 _iso_z_re = re.compile(r'^(?P<date>\d{4}-\d{2}-\d{2})T'
                       r'(?P<time>\d{2}:\d{2}:\d{2})'
@@ -65,6 +67,7 @@ def test_octetStreamDecoder():
     settings.operate = MSeqPayloadLength(pdOut=7, od=2, pdIn=10)
 
     decoder = OctetStreamDecoder(settings)
+    interpreter = MessageInterpreter()
 
     # test_data = getTestData(os.path.join(os.path.dirname(__file__), 'serialdata_short.csv'))
     test_data = getTestData(os.path.join(os.path.dirname(__file__), 'serialdata_pre_operate.csv'))
@@ -75,6 +78,8 @@ def test_octetStreamDecoder():
         message = decoder.processOctet(data['value'], data['start'], data['end'])
         if isinstance(message, MasterMessage):
             print(message)
+            interpreter.processMessage(message)
         elif isinstance(message, DeviceMessage):
             print(message)
+            interpreter.processMessage(message)
 

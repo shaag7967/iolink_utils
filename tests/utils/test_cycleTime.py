@@ -11,6 +11,9 @@ def test_zeroTimeValue():
     assert CycleTime.decodeToTimeInMs(octet) == 0.0
 
 def test_allValidTimeValues():
+    octet = CycleTimeOctet(0x49)
+    assert CycleTime.decodeToTimeInMs(octet) == 10
+
     for value in range(4, 64, 1):
         ms = round(value/10, 1)
         octet = CycleTime.encodeAsCycleTimeOctet(ms)

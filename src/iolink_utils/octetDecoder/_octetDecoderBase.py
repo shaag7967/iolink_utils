@@ -41,6 +41,6 @@ class OctetDecoderBase(ctypes.BigEndianStructure):
     def __repr__(self):
         """String representation of decoded content."""
         fields_repr = ", ".join(
-            f"{name}={getattr(self, name)}" for name, *_ in self._fields_
+            f"{name}={getattr(self, name)}" for name, *_ in self._fields_ if name != 'unused'
         )
         return f"{self.__class__.__name__}({fields_repr})"
