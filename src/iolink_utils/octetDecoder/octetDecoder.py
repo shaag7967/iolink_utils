@@ -1,6 +1,7 @@
 from ._octetDecoderBase import OctetDecoderBase, ctypes
 from iolink_utils.definitions.communicationChannel import CommChannel
 from iolink_utils.definitions.transmissionDirection import TransmissionDirection
+from iolink_utils.definitions.events import EventType, EventInstance, EventMode, EventSource
 
 
 class MC(OctetDecoderBase):
@@ -45,12 +46,17 @@ class StatusCodeType1(OctetDecoderBase):
         ("eventCode", ctypes.c_uint8, 5)
     ]
 
-
+# See A.6.3 StatusCode type 2 (with details)
 class StatusCodeType2(OctetDecoderBase):
     _fields_ = [
         ("details", ctypes.c_uint8, 1),
         ("unused", ctypes.c_uint8, 1),
-        ("activatedEvents", ctypes.c_uint8, 6)
+        ("evt6", ctypes.c_uint8, 1),
+        ("evt5", ctypes.c_uint8, 1),
+        ("evt4", ctypes.c_uint8, 1),
+        ("evt3", ctypes.c_uint8, 1),
+        ("evt2", ctypes.c_uint8, 1),
+        ("evt1", ctypes.c_uint8, 1)
     ]
 
 
@@ -61,6 +67,29 @@ class EventQualifier(OctetDecoderBase):
         ("source", ctypes.c_uint8, 1),
         ("instance", ctypes.c_uint8, 3)
     ]
+
+    def __str__(self):
+        return (f"EventQualifier({EventMode(self.mode).name}, {EventType(self.type).name}, "
+                f"{EventSource(self.source).name}, {EventInstance(self.instance).name})")
+
+
+class EventCode(OctetDecoderBase):
+    _fields_ = [
+        ("code", ctypes.c_uint16)
+    ]
+
+    def __str__(self):
+        return f"EventCode({self.code}d / 0x{self.code:04X})"
+
+
+class Event(OctetDecoderBase):
+    _fields_ = [
+        ('qualifier', EventQualifier),
+        ("code", EventCode)
+    ]
+
+    def __str__(self):
+        return f"Event({self.qualifier}, {self.code})"
 
 
 class CycleTimeOctet(OctetDecoderBase):

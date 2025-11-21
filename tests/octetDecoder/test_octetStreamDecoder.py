@@ -1,8 +1,7 @@
 import pytest
 import csv
 import os
-import re
-from datetime import datetime, timezone
+from datetime import datetime
 import logging
 
 from iolink_utils.iodd.iodd import Iodd
@@ -12,29 +11,10 @@ from iolink_utils.octetDecoder.octetStreamDecoderSettings import MSeqPayloadLeng
 from iolink_utils.definitions.bitRate import BitRate
 
 from iolink_utils.messageInterpreter.messageInterpreter import MessageInterpreter
+from iolink_utils.messageInterpreter.commChannelPage import TransactionPage
+from iolink_utils.messageInterpreter.commChannelDiagnosis import TransactionDiagEventMemory, TransactionDiagEventReset
 
 
-_iso_z_re = re.compile(r'^(?P<date>\d{4}-\d{2}-\d{2})T'
-                      r'(?P<time>\d{2}:\d{2}:\d{2})'
-                      r'(?:\.(?P<frac>\d+))?Z$')
-
-def parse_iso8601_z(s, keep_frac_as_int=False):
-    s = s.strip()
-    m = _iso_z_re.match(s)
-    if not m:
-        raise ValueError(f"Invalid Format: {s!r}")
-    date = m.group('date')
-    time = m.group('time')
-    frac = m.group('frac') or '0'
-
-    micros = (frac + '000000')[:6]
-    dt_for_strptime = f"{date}T{time}.{micros}Z"
-    dt = datetime.strptime(dt_for_strptime, "%Y-%m-%dT%H:%M:%S.%fZ")
-    dt = dt.replace(tzinfo=timezone.utc)
-
-    if keep_frac_as_int:
-        return dt, int(frac)
-    return dt
 
 def getTestData(filename: str):
     rows = []
@@ -45,8 +25,8 @@ def getTestData(filename: str):
 
             value = int(value_str)
             error = error if error else None
-            start = parse_iso8601_z(start_str)
-            end = parse_iso8601_z(end_str)
+            start = datetime.fromisoformat(start_str)
+            end = datetime.fromisoformat(end_str)
 
             rows.append({
                 "value": value,
@@ -70,16 +50,28 @@ def test_octetStreamDecoder():
     interpreter = MessageInterpreter()
 
     # test_data = getTestData(os.path.join(os.path.dirname(__file__), 'serialdata_short.csv'))
-    test_data = getTestData(os.path.join(os.path.dirname(__file__), 'serialdata_pre_operate.csv'))
+    # test_data = getTestData(os.path.join(os.path.dirname(__file__), 'serialdata_pre_operate.csv'))
+    test_data = getTestData(os.path.join(os.path.dirname(__file__), 'tmg_safetyCommunication.csv'))
+
+    line = 0
     for data in test_data:
+        line += 1
         if data['error'] is not None:
             continue
 
+        # print(line, end=' ')
+        # print(data)
         message = decoder.processOctet(data['value'], data['start'], data['end'])
-        if isinstance(message, MasterMessage):
-            print(message)
-            interpreter.processMessage(message)
-        elif isinstance(message, DeviceMessage):
-            print(message)
-            interpreter.processMessage(message)
+        # if isinstance(message, MasterMessage):
+        #     print(message)
+        # elif isinstance(message, DeviceMessage):
+        #     print(message)
 
+        commChannelMessages = interpreter.processMessage(message)
+        for msg in commChannelMessages:
+            if isinstance(msg, TransactionPage):
+                print(msg)
+            elif isinstance(msg, TransactionDiagEventMemory):
+                print(msg)
+            elif isinstance(msg, TransactionDiagEventReset):
+                print(msg)

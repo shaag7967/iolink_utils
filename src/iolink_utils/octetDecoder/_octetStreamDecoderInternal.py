@@ -68,10 +68,10 @@ class DeviceMessageDecoder:
             if self.octetCount == 0:
                 self.msg.start_time = start_time
 
-            if len(self.msg.pdIn) < self.pdInLen:
-                self.msg.pdIn.append(octet)
-            elif len(self.msg.od) < self.odLen:
+            if len(self.msg.od) < self.odLen:
                 self.msg.od.append(octet)
+            elif len(self.msg.pdIn) < self.pdInLen:
+                self.msg.pdIn.append(octet)
             else:
                 self.msg.cks = CKS.from_buffer_copy(bytes([octet]), 0)
 
