@@ -1,4 +1,3 @@
-
 lookup_8to6_compression = [
     0x00, 0x11, 0x21, 0x30, 0x12, 0x03, 0x33, 0x22,
     0x22, 0x33, 0x03, 0x12, 0x30, 0x21, 0x11, 0x00,
@@ -35,7 +34,7 @@ lookup_8to6_compression = [
 ]
 
 
-def __compress_8_to_6(value: int) -> int:
+def __compress_8_to_6(value: int) -> int:  # pragma: no cover
     """Compresses an 8-Bit checksum to 6 bits.
        Do not use this function -> use the lookup table instead
 
@@ -62,7 +61,7 @@ def __compress_8_to_6(value: int) -> int:
     return compressed
 
 
-def __print_lookup_table():
+def __print_lookup_table():  # pragma: no cover
     values = []
     for i in range(256):
         values.append(__compress_8_to_6(i))
