@@ -1,4 +1,4 @@
-from typing import Union, Optional, List, Dict
+from typing import List, Dict
 from datetime import datetime as dt
 
 from iolink_utils.octetDecoder.octetStreamDecoderMessages import DeviceMessage, MasterMessage
@@ -26,7 +26,7 @@ class TransactionPage:
         }
 
     def __str__(self):
-        return f"Page: {' '.join(filter(None, [self.name, self.value]))} ({self.start_time} {self.end_time})"
+        return f"Page: {' '.join(filter(None, [self.name, self.value]))}"
 
 
 class CommChannelPage:
@@ -37,6 +37,59 @@ class CommChannelPage:
         self.direction: TransmissionDirection = TransmissionDirection.Read
         self.pageIndex: int = 0
         self.octet: int = 0
+
+        self._pageIndexHandler = {
+            DirectParameterPage1Index.MasterCommand: self._handleMasterCommand,
+            DirectParameterPage1Index.MasterCycleTime: self._handleMasterCycleTime,
+            DirectParameterPage1Index.MinCycleTime: self._handleMinCycleTime,
+            DirectParameterPage1Index.MSequenceCapability: self._handleMSeqCapability,
+            DirectParameterPage1Index.RevisionID: self._handleRevisionId,
+            DirectParameterPage1Index.ProcessDataIn: self._handlePDIn,
+            DirectParameterPage1Index.ProcessDataOut: self._handlePDOut,
+            DirectParameterPage1Index.VendorID_MSB: lambda: self._handleHexValue("VendorID_MSB"),
+            DirectParameterPage1Index.VendorID_LSB: lambda: self._handleHexValue("VendorID_LSB"),
+            DirectParameterPage1Index.DeviceID_MSB: lambda: self._handleHexValue("DeviceID_MSB"),
+            DirectParameterPage1Index.DeviceID: lambda: self._handleHexValue("DeviceID"),
+            DirectParameterPage1Index.DeviceID_LSB: lambda: self._handleHexValue("DeviceID_LSB"),
+            DirectParameterPage1Index.FunctionID_MSB: lambda: self._handleHexValue("FunctionID_MSB"),
+            DirectParameterPage1Index.FunctionID_LSB: lambda: self._handleHexValue("FunctionID_LSB"),
+            DirectParameterPage1Index.SystemCommand: self._handleSystemCommand,
+        }
+
+    def _handleMasterCommand(self):
+        if self.direction == TransmissionDirection.Write:
+            return TransactionPage("MasterCommand", MasterCommand(self.octet).name)
+
+    def _handleMasterCycleTime(self):
+        cto = CycleTimeOctet.from_buffer_copy(bytes([self.octet]), 0)
+        return TransactionPage("MasterCycleTime", f"{CycleTime.decodeToTimeInMs(cto)}ms")
+
+    def _handleMinCycleTime(self):
+        cto = CycleTimeOctet.from_buffer_copy(bytes([self.octet]), 0)
+        return TransactionPage("MinCycleTime", f"{CycleTime.decodeToTimeInMs(cto)}ms")
+
+    def _handleMSeqCapability(self):
+        val = MSequenceCapability.from_buffer_copy(bytes([self.octet]), 0)
+        return TransactionPage("MSequenceCapability", str(val))
+
+    def _handleRevisionId(self):
+        val = RevisionId.from_buffer_copy(bytes([self.octet]), 0)
+        return TransactionPage("RevisionID", str(val))
+
+    def _handlePDIn(self):
+        val = ProcessDataIn.from_buffer_copy(bytes([self.octet]), 0)
+        return TransactionPage("ProcessDataIn", str(val))
+
+    def _handlePDOut(self):
+        val = ProcessDataOut.from_buffer_copy(bytes([self.octet]), 0)
+        return TransactionPage("ProcessDataOut", str(val))
+
+    def _handleHexValue(self, label):
+        return TransactionPage(label, bytes([self.octet]).hex())
+
+    def _handleSystemCommand(self):
+        if self.direction == TransmissionDirection.Write:
+            return TransactionPage("SystemCommand", SystemCommand(self.octet).name)
 
     def processMasterMessage(self, message: MasterMessage):
         self.start_time = message.start_time
@@ -53,53 +106,14 @@ class CommChannelPage:
         if self.direction == TransmissionDirection.Read:
             self.octet = message.od[0]
 
-        transaction = None
+        handler = self._pageIndexHandler.get(self.pageIndex)
+        if handler is None:
+            return []
 
-        if self.pageIndex == DirectParameterPage1Index.MasterCommand:
-            if self.direction == TransmissionDirection.Write:
-                transaction = TransactionPage("MasterCommand", MasterCommand(self.octet).name)
-        elif self.pageIndex == DirectParameterPage1Index.MasterCycleTime:
-            cycleTimeOctet = CycleTimeOctet.from_buffer_copy(bytes([self.octet]), 0)
-            transaction = TransactionPage("MasterCycleTime", f"{CycleTime.decodeToTimeInMs(cycleTimeOctet)}ms")
-        elif self.pageIndex == DirectParameterPage1Index.MinCycleTime:
-            cycleTimeOctet = CycleTimeOctet.from_buffer_copy(bytes([self.octet]), 0)
-            transaction = TransactionPage("MinCycleTime", f"{CycleTime.decodeToTimeInMs(cycleTimeOctet)}ms")
-        elif self.pageIndex == DirectParameterPage1Index.MSequenceCapability:
-            capaOctet = MSequenceCapability.from_buffer_copy(bytes([self.octet]), 0)
-            transaction = TransactionPage("", str(capaOctet))
-        elif self.pageIndex == DirectParameterPage1Index.RevisionID:
-            revOctet = RevisionId.from_buffer_copy(bytes([self.octet]), 0)
-            transaction = TransactionPage("", str(revOctet))
-        elif self.pageIndex == DirectParameterPage1Index.ProcessDataIn:
-            pdOctet = ProcessDataIn.from_buffer_copy(bytes([self.octet]), 0)
-            transaction = TransactionPage("", str(pdOctet))
-        elif self.pageIndex == DirectParameterPage1Index.ProcessDataOut:
-            pdOctet = ProcessDataOut.from_buffer_copy(bytes([self.octet]), 0)
-            transaction = TransactionPage("", str(pdOctet))
-        elif self.pageIndex == DirectParameterPage1Index.VendorID_MSB:
-            transaction = TransactionPage("VendorID_MSB", bytes([self.octet]).hex())
-        elif self.pageIndex == DirectParameterPage1Index.VendorID_LSB:
-            transaction = TransactionPage("VendorID_LSB", bytes([self.octet]).hex())
-        elif self.pageIndex == DirectParameterPage1Index.DeviceID_MSB:
-            transaction = TransactionPage("DeviceID_MSB", bytes([self.octet]).hex())
-        elif self.pageIndex == DirectParameterPage1Index.DeviceID:
-            transaction = TransactionPage("DeviceID", bytes([self.octet]).hex())
-        elif self.pageIndex == DirectParameterPage1Index.DeviceID_LSB:
-            transaction = TransactionPage("DeviceID_LSB", bytes([self.octet]).hex())
-        elif self.pageIndex == DirectParameterPage1Index.FunctionID_MSB:
-            transaction = TransactionPage("FunctionID_MSB", bytes([self.octet]).hex())
-        elif self.pageIndex == DirectParameterPage1Index.FunctionID_LSB:
-            transaction = TransactionPage("FunctionID_LSB", bytes([self.octet]).hex())
-        elif self.pageIndex == DirectParameterPage1Index.Reserved:
-            pass
-        elif self.pageIndex == DirectParameterPage1Index.SystemCommand:
-            if self.direction == TransmissionDirection.Write:
-                transaction = TransactionPage("SystemCommand", SystemCommand(self.octet).name)
-
-        if transaction is not None:
+        transaction = handler()
+        if transaction:
             transaction.start_time = self.start_time
             transaction.end_time = self.end_time
             return [transaction]
-        else:
-            return []
 
+        return []
