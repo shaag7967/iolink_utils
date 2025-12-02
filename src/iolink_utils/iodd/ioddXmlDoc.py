@@ -215,7 +215,21 @@ class IoddXmlDoc:
         return items
 
     def __getArrayTypeAsJSON(self, xml_array_datatype):
-        raise NotImplemented("ArrayT not implemented yet")
+        items = []
+
+        count = int(xml_array_datatype.attrib.get('count'))
+        dataType = self.__getDatatype(xml_array_datatype)
+        # only SimpleDataTypes allowed inside an ArrayT
+        datatype_json = self.__getSimpleDatatypeAsJSON(dataType)
+
+        for itemNumber in range(count):
+            arrayItem_json = {
+                'bitOffset': int(datatype_json['bitLength']) * itemNumber,
+                'data': datatype_json
+            }
+            items.append(arrayItem_json)
+
+        return items
 
     def __getComplexDatatypeAsJSON(self, xml_complex_datatype):
         typeName = xml_complex_datatype.get(f"{{{IoddXmlDoc.NAMESPACE['xsi']}}}type")
