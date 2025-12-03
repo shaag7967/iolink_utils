@@ -3,7 +3,8 @@ from typing import Union, Optional, List
 from iolink_utils.octetDecoder.octetStreamDecoderMessages import DeviceMessage, MasterMessage
 from iolink_utils.definitions.communicationChannel import CommChannel
 from .commChannelDiagnosis import CommChannelDiagnosis, TransactionDiagEventMemory, TransactionDiagEventReset
-from .commChannelISDU import CommChannelISDU, TransactionISDU
+from .commChannelISDU import CommChannelISDU
+from .ISDU import ISDU
 from .commChannelPage import CommChannelPage, TransactionPage
 
 
@@ -26,7 +27,7 @@ class MessageInterpreter:
         self.activeChannel: Optional[CommChannel] = CommChannel.Process
 
     def processMessage(self, message: Union[None, MasterMessage, DeviceMessage]) -> List[
-        Union[TransactionPage, TransactionDiagEventMemory, TransactionDiagEventReset, TransactionISDU]]:
+        Union[TransactionPage, TransactionDiagEventMemory, TransactionDiagEventReset, ISDU]]:
 
         if isinstance(message, MasterMessage):
             self.activeChannel = CommChannel(message.mc.channel)

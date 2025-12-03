@@ -2,7 +2,7 @@ from enum import IntEnum
 
 
 class ProfileID(IntEnum):
-    Undefined = 0
+    Unknown = 0
     GenericProfiledSensor = 1
     FixedSwitchingSensor = 2
     FSS_3 = 3
@@ -63,3 +63,7 @@ class ProfileID(IntEnum):
     Locator = 33025
     ProductURI = 33026
     BlobTransfer = 36608
+
+    @classmethod
+    def _missing_(cls, value):
+        return cls.Unknown

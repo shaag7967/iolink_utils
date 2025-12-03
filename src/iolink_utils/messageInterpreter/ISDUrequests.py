@@ -18,6 +18,16 @@ class ISDURequest_Write8bitIdx(ISDU):
             self.index = int(self.rawData[pos])
         return finished
 
+    def name(self) -> str:
+        return 'Write8bitIdx'
+
+    def data(self) -> dict:
+        return {
+            'valid': self.isValid,
+            'index': self.index,
+            'data': self.rawData # TODO payload only
+        }
+
     def __str__(self):
         return f"ISDURequest_Write8bitIdx(index={self.index} data={self.rawData.hex()})"
 
@@ -36,6 +46,17 @@ class ISDURequest_Write8bitIdxSub(ISDU):
             self.index = int(self.rawData[pos])
             self.subIndex = int(self.rawData[pos+1])
         return finished
+
+    def name(self) -> str:
+        return 'Write8bitIdxSub'
+
+    def data(self) -> dict:
+        return {
+            'valid': self.isValid,
+            'index': self.index,
+            'subIndex': self.subIndex,
+            'data': self.rawData # TODO payload only
+        }
 
     def __str__(self):
         return f"ISDURequest_Write8bitIdxSub(index={self.index} subIndex={self.subIndex} data={self.rawData.hex()})"
@@ -56,6 +77,17 @@ class ISDURequest_Write16bitIdxSub(ISDU):
             self.subIndex = int(self.rawData[pos+2])
         return finished
 
+    def name(self) -> str:
+        return 'Write16bitIdxSub'
+
+    def data(self) -> dict:
+        return {
+            'valid': self.isValid,
+            'index': self.index,
+            'subIndex': self.subIndex,
+            'data': self.rawData # TODO payload only
+        }
+
     def __str__(self):
         return f"ISDURequest_Write16bitIdxSub(index={self.index} subIndex={self.subIndex} data={self.rawData.hex()})"
 
@@ -73,6 +105,15 @@ class ISDURequest_Read8bitIdx(ISDU):
         if finished:
             self.index = int(self.rawData[1])
         return finished
+
+    def name(self) -> str:
+        return 'Read8bitIdx'
+
+    def data(self) -> dict:
+        return {
+            'valid': self.isValid,
+            'index': self.index
+        }
 
     def __str__(self):
         return f"ISDURequest_Read8bitIdx(index={self.index} data={self.rawData.hex()})"
@@ -92,6 +133,16 @@ class ISDURequest_Read8bitIdxSub(ISDU):
             self.subIndex = int(self.rawData[2])
         return finished
 
+    def name(self) -> str:
+        return 'Read8bitIdxSub'
+
+    def data(self) -> dict:
+        return {
+            'valid': self.isValid,
+            'index': self.index,
+            'subIndex': self.subIndex
+        }
+
     def __str__(self):
         return f"ISDURequest_Read8bitIdxSub(index={self.index} subIndex={self.subIndex} data={self.rawData.hex()})"
 
@@ -109,6 +160,17 @@ class ISDURequest_Read16bitIdxSub(ISDU):
             self.index = int.from_bytes(self.rawData[1:2], byteorder='big')
             self.subIndex = int(self.rawData[3])
         return finished
+
+    def name(self) -> str:
+        return 'Read16bitIdxSub'
+
+    def data(self) -> dict:
+        return {
+            'name': 'Read16bitIdxSub',
+            'valid': self.isValid,
+            'index': self.index,
+            'subIndex': self.subIndex
+        }
 
     def __str__(self):
         return f"ISDURequest_Read16bitIdxSub(index={self.index} subIndex={self.subIndex} data={self.rawData.hex()})"

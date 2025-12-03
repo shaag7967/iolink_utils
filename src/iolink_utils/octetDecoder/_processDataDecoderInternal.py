@@ -15,7 +15,7 @@ _safetyCodeInFields = [
     ("FI_DTimeout", ctypes.c_uint8, 1),
     ("FI_DCommError", ctypes.c_uint8, 1),
     ("FI_SDset", ctypes.c_uint8, 1),
-    ("F_unused", ctypes.c_uint8, 2),
+    ("unused", ctypes.c_uint8, 2),
     ("FI_DCNT", ctypes.c_uint8, 3),
     ("FI_portNum", ctypes.c_uint8)
 ]

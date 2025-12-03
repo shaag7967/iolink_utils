@@ -28,7 +28,7 @@ class IoddXmlDoc:
 
         if xml_document_info is not None:
             doc_info.version = Version(xml_document_info.get("version"))
-            doc_info.releaseDate = date.fromisoformat(xml_document_info.get("releaseDate"))
+            doc_info.releaseDate = date.fromisoformat(xml_document_info.get("releaseDate").strip())
             doc_info.copyright = xml_document_info.get("copyright")
 
         return doc_info

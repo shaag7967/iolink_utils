@@ -18,6 +18,16 @@ class ISDUResponse_WriteResp_M(ISDU):
             self.additionalCode = int(self.rawData[2])
         return finished
 
+    def name(self) -> str:
+        return 'WriteResp_M'
+
+    def data(self) -> dict:
+        return {
+            'valid': self.isValid,
+            'errorCode': self.errorCode,
+            'additionalCode': self.additionalCode
+        }
+
     def __str__(self):
         return f"ISDUResponse_WriteResp_M(errorCode={self.errorCode} additionalCode={self.additionalCode} data={self.rawData.hex()})"
 
@@ -28,6 +38,14 @@ class ISDUResponse_WriteResp_P(ISDU):
 
     def appendOctets(self, flowCtrl: FlowCtrl, requestData: bytearray) -> bool:
         return super().appendOctets(flowCtrl, requestData)
+
+    def name(self) -> str:
+        return 'WriteResp_P'
+
+    def data(self) -> dict:
+        return {
+            'valid': self.isValid
+        }
 
     def __str__(self):
         return f"ISDUResponse_WriteResp_P(data={self.rawData.hex()})"
@@ -47,6 +65,16 @@ class ISDUResponse_ReadResp_M(ISDU):
             self.additionalCode = int(self.rawData[2])
         return finished
 
+    def name(self) -> str:
+        return 'ReadResp_M'
+
+    def data(self) -> dict:
+        return {
+            'valid': self.isValid,
+            'errorCode': self.errorCode,
+            'additionalCode': self.additionalCode
+        }
+
     def __str__(self):
         return f"ISDUResponse_ReadResp_M(errorCode={self.errorCode} additionalCode={self.additionalCode} data={self.rawData.hex()})"
 
@@ -57,6 +85,15 @@ class ISDUResponse_ReadResp_P(ISDU):
 
     def appendOctets(self, flowCtrl: FlowCtrl, requestData: bytearray) -> bool:
         return super().appendOctets(flowCtrl, requestData)
+
+    def name(self) -> str:
+        return 'ReadResp_P'
+
+    def data(self) -> dict:
+        return {
+            'valid': self.isValid,
+            'data': self.rawData # TODO payload only
+        }
 
     def __str__(self):
         return f"ISDUResponse_ReadResp_P(data={self.rawData.hex()})"

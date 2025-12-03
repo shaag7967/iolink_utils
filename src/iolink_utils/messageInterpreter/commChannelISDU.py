@@ -10,23 +10,6 @@ from .ISDUrequests import createISDURequest
 from .ISDUresponses import createISDUResponse
 
 
-class TransactionISDU:
-    def __init__(self, value: str):
-        self.start_time: dt = dt(1970, 1, 1)
-        self.end_time: dt = dt(1970, 1, 1)
-
-        self.value: str = value
-
-    def data(self) -> Dict:
-        return {
-            'isdu': ' '.join(filter(None, [self.value]))
-        }
-
-    def __str__(self):
-        return f"ISDU: {' '.join(filter(None, [self.value]))}"
-
-
-
 class CommChannelISDU:
     class State(IntEnum):
         Idle = 0,
@@ -45,12 +28,11 @@ class CommChannelISDU:
         self.isduRequest = None
         self.isduResponse = None
 
+        self.responseStartTime = None
+
     def processMasterMessage(self, message: MasterMessage):
         self.direction = TransmissionDirection(message.mc.read)
         self.flowCtrl = FlowCtrl(message.mc.address)
-
-        if self.flowCtrl.state != FlowCtrl.State.Idle:
-            print(message)
 
         if self.state == CommChannelISDU.State.Idle:
             if self.flowCtrl.state == FlowCtrl.State.Start and self.direction == TransmissionDirection.Write:
@@ -76,25 +58,19 @@ class CommChannelISDU:
             elif self.flowCtrl.state == FlowCtrl.State.Abort:
                 self.state = CommChannelISDU.State.Idle
 
-        elif self.state == CommChannelISDU.State.Response: # WaitForResponse
+        elif self.state == CommChannelISDU.State.WaitForResponse:
             if self.flowCtrl.state == FlowCtrl.State.Start and self.direction == TransmissionDirection.Read:
-                pass
+                self.responseStartTime = message.start_time
 
         return []
 
     def processDeviceMessage(self, message: DeviceMessage):
         isduTransactions = []
 
-        if self.flowCtrl.state != FlowCtrl.State.Idle:
-            print(message)
-
         if self.state == CommChannelISDU.State.RequestFinished:
             self.isduRequest.setEndTime(message.end_time)
 
-            transaction = TransactionISDU(str(self.isduRequest))
-            transaction.start_time = message.start_time
-            transaction.end_time = message.end_time
-            isduTransactions.append(transaction)
+            isduTransactions.append(self.isduRequest)
             self.state = CommChannelISDU.State.WaitForResponse
 
         elif self.state == CommChannelISDU.State.WaitForResponse:
@@ -102,15 +78,12 @@ class CommChannelISDU:
                 if IService(message.od[0]).service != IServiceNibble.NoService:
                     self.isduResponse = createISDUResponse(IService(message.od[0]))
 
-                    self.isduResponse.setStartTime(message.start_time)
+                    self.isduResponse.setStartTime(self.responseStartTime)
                     self.isduResponse.setEndTime(message.end_time)
                     self.isduResponse.appendOctets(self.flowCtrl, message.od)
 
                     if self.isduResponse.isComplete:
-                        transaction = TransactionISDU(str(self.isduResponse))
-                        transaction.start_time = message.start_time
-                        transaction.end_time = message.end_time
-                        isduTransactions.append(transaction)
+                        isduTransactions.append(self.isduResponse)
                         self.state = CommChannelISDU.State.Idle
                     else:
                         self.state = CommChannelISDU.State.Response
@@ -121,10 +94,7 @@ class CommChannelISDU:
                 self.isduResponse.appendOctets(self.flowCtrl, message.od)
 
                 if self.isduResponse.isComplete:
-                    transaction = TransactionISDU(str(self.isduResponse))
-                    transaction.start_time = message.start_time
-                    transaction.end_time = message.end_time
-                    isduTransactions.append(transaction)
+                    isduTransactions.append(self.isduResponse)
                     self.state = CommChannelISDU.State.Idle
 
             elif self.flowCtrl.state == FlowCtrl.State.Abort:
