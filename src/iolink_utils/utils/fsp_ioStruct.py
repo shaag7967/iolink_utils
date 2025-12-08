@@ -7,7 +7,9 @@ def createFSP_IOStructDescription(processDataDefinition: dict) -> FSP_IOStructDe
 
     if len(processDataDefinition) != 1 or None not in processDataDefinition:
         # multiple ProcessData definitions are not allowed in SafetyDevices
-        return description
+        raise InvalidProcessDataDefinition(f"Invalid ProcessData: for safety devices, only a "
+                                           f"single definition is allowed (with key None). "
+                                           f"Found {len(processDataDefinition)} definitions.")
 
     def _getDescription(pdDescrInOut) -> FSP_IOStructDescription.Description:
         descr = FSP_IOStructDescription.Description()
