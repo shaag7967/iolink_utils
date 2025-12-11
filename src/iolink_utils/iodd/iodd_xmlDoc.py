@@ -19,10 +19,16 @@ class IoddXmlDoc:
 
     def __init__(self, iodd_xml_file_path: str):
         self.iodd_xml_doc = etree.parse(iodd_xml_file_path)
+        root = self.iodd_xml_doc.getroot()
+        self.namespaces = {
+            'iolink': root.nsmap.get(None),
+            'xsi': root.nsmap.get('xsi')
+        }
+        self.docType = etree.QName(root).localname  # IODevice (iodd) or ExternalTextDocument (translations)
 
     def get_document_info(self) -> DocumentInfo:
         root = self.iodd_xml_doc.getroot()
-        xml_document_info = root.find(".//iolink:DocumentInfo", namespaces=IoddXmlDoc.NAMESPACE)
+        xml_document_info = root.find(".//iolink:DocumentInfo", namespaces=self.namespaces)
 
         doc_info = DocumentInfo()
 
@@ -35,7 +41,7 @@ class IoddXmlDoc:
 
     def get_identity(self) -> Identity:
         root = self.iodd_xml_doc.getroot()
-        xml_identity = root.find(".//iolink:DeviceIdentity", namespaces=IoddXmlDoc.NAMESPACE)
+        xml_identity = root.find(".//iolink:DeviceIdentity", namespaces=self.namespaces)
 
         identity = Identity()
 
@@ -46,12 +52,12 @@ class IoddXmlDoc:
 
             identity.vendorText = self.__getTextTuple(xml_identity, 'VendorText')
             identity.vendorUrl = self.__getTextTuple(xml_identity, 'VendorUrl')
-            xml_vendorLogo = xml_identity.find(".//iolink:VendorLogo", namespaces=IoddXmlDoc.NAMESPACE)
+            xml_vendorLogo = xml_identity.find(".//iolink:VendorLogo", namespaces=self.namespaces)
             identity.vendorLogo = "" if xml_vendorLogo is None else xml_vendorLogo.get('name')
             identity.deviceName = self.__getTextTuple(xml_identity, 'DeviceName')
             identity.deviceFamily = self.__getTextTuple(xml_identity, 'DeviceFamily')
 
-            xml_deviceVariants = xml_identity.xpath(".//iolink:DeviceVariant", namespaces=IoddXmlDoc.NAMESPACE)
+            xml_deviceVariants = xml_identity.xpath(".//iolink:DeviceVariant", namespaces=self.namespaces)
             for xml_deviceVariant in xml_deviceVariants:
                 variant = DeviceVariant()
                 variant.productId = xml_deviceVariant.get('productId')
@@ -65,7 +71,7 @@ class IoddXmlDoc:
 
     def get_device_features(self) -> Features:
         root = self.iodd_xml_doc.getroot()
-        xml_features = root.find(".//iolink:Features", namespaces=IoddXmlDoc.NAMESPACE)
+        xml_features = root.find(".//iolink:Features", namespaces=self.namespaces)
 
         features = Features()
 
@@ -74,7 +80,7 @@ class IoddXmlDoc:
             features.dataStorage = xml_features.get("dataStorage") == "true"
             features.profileIDs = [ProfileID(int(c)) for c in xml_features.get("profileCharacteristic", default='').split()]
 
-            xml_locks = xml_features.xpath("./iolink:SupportedAccessLocks", namespaces=IoddXmlDoc.NAMESPACE)
+            xml_locks = xml_features.xpath("./iolink:SupportedAccessLocks", namespaces=self.namespaces)
             if len(xml_locks) == 1:
                 features.supportedAccessLocks.parameter = xml_locks[0].get("parameter")
                 features.supportedAccessLocks.dataStorage = xml_locks[0].get("dataStorage")
@@ -85,15 +91,21 @@ class IoddXmlDoc:
 
     def get_physical_layer(self) -> PhysicalLayer:
         root = self.iodd_xml_doc.getroot()
-        xml_physical_layer = root.find(".//iolink:PhysicalLayer", namespaces=IoddXmlDoc.NAMESPACE)
+        xml_physical_layer = root.find(".//iolink:PhysicalLayer", namespaces=self.namespaces)
 
         physical_layer = PhysicalLayer()
 
         if xml_physical_layer is not None:
-            physical_layer.bitrate = BitRate(xml_physical_layer.get("bitrate"))
+            bitrate = xml_physical_layer.get("bitrate")
+            if not bitrate:
+                bitrate = xml_physical_layer.get("baudrate")
+            physical_layer.bitrate = BitRate(bitrate)
             physical_layer.min_cycle_time = int(xml_physical_layer.get("minCycleTime"))
             physical_layer.sio_supported = xml_physical_layer.get("sioSupported") == "true"
-            physical_layer.m_sequence_capability = MSequenceCapability(int(xml_physical_layer.get("mSequenceCapability")))
+
+            capa = xml_physical_layer.get("mSequenceCapability")
+            if capa:
+                physical_layer.m_sequence_capability = MSequenceCapability(int(capa))
 
         return physical_layer
 
@@ -102,20 +114,20 @@ class IoddXmlDoc:
 
         pdDefs = {}
 
-        for xml_process_data in root.xpath(".//iolink:ProcessData", namespaces=IoddXmlDoc.NAMESPACE):
-            xml_cond = xml_process_data.find("./iolink:Condition", namespaces=IoddXmlDoc.NAMESPACE)
+        for xml_process_data in root.xpath(".//iolink:ProcessData", namespaces=self.namespaces):
+            xml_cond = xml_process_data.find("./iolink:Condition", namespaces=self.namespaces)
             condition = None if xml_cond is None else int(xml_cond.get("value"))  # is int or bool
 
             processData_json = {
                 'id': xml_process_data.get("id")
             }
 
-            pdIn = xml_process_data.xpath("./iolink:ProcessDataIn", namespaces=IoddXmlDoc.NAMESPACE)
+            pdIn = xml_process_data.xpath("./iolink:ProcessDataIn", namespaces=self.namespaces)
             assert (len(pdIn) <= 1)
             if len(pdIn) == 1:
                 processData_json['pdIn'] = self.__getProcessDataInOutAsJSON(pdIn[0])
 
-            pdOut = xml_process_data.xpath("./iolink:ProcessDataOut", namespaces=IoddXmlDoc.NAMESPACE)
+            pdOut = xml_process_data.xpath("./iolink:ProcessDataOut", namespaces=self.namespaces)
             assert (len(pdOut) <= 1)
             if len(pdOut) == 1:
                 processData_json['pdOut'] = self.__getProcessDataInOutAsJSON(pdOut[0])
@@ -131,8 +143,9 @@ class IoddXmlDoc:
         :param textXmlTag: tag name which contains textId attribute (e.g. DeviceName)
         :return: name of textId and text
         """
-        text_id = xml_element.find(f'./iolink:{textXmlTag}', namespaces=IoddXmlDoc.NAMESPACE).attrib.get('textId')
-        if text_id is not None:
+        textTag = xml_element.find(f'./iolink:{textXmlTag}', namespaces=self.namespaces)
+        if textTag is not None:
+            text_id = textTag.attrib.get('textId')
             return text_id, self.__getTextForTextID(text_id)
         else:
             return "", ""
@@ -141,19 +154,19 @@ class IoddXmlDoc:
         root = self.iodd_xml_doc.getroot()
         result = root.xpath(f"//iolink:ExternalTextCollection/"
                             f"iolink:PrimaryLanguage[@xml:lang='{language}']/iolink:Text[@id='{text_id}']/@value",
-                            namespaces=IoddXmlDoc.NAMESPACE)
+                            namespaces=self.namespaces)
         return result[0] if result else ""
 
     def __getDatatype(self, xml_element):
-        dataType = xml_element.find("./iolink:Datatype", namespaces=IoddXmlDoc.NAMESPACE)
+        dataType = xml_element.find("./iolink:Datatype", namespaces=self.namespaces)
         if dataType is None:
-            dataType = xml_element.find("./iolink:SimpleDatatype", namespaces=IoddXmlDoc.NAMESPACE)
+            dataType = xml_element.find("./iolink:SimpleDatatype", namespaces=self.namespaces)
             if dataType is None:
-                dataTypeRef = xml_element.find("./iolink:DatatypeRef", namespaces=IoddXmlDoc.NAMESPACE)
+                dataTypeRef = xml_element.find("./iolink:DatatypeRef", namespaces=self.namespaces)
                 if dataTypeRef is not None:
                     dataTypeId = dataTypeRef.get("datatypeId")
                     dataTypeList = self.iodd_xml_doc.getroot().xpath(f".//iolink:Datatype[@id='{dataTypeId}']",
-                                                                     namespaces=IoddXmlDoc.NAMESPACE)
+                                                                     namespaces=self.namespaces)
                     if len(dataTypeList) == 1:
                         dataType = dataTypeList[0]
         return dataType
@@ -167,7 +180,7 @@ class IoddXmlDoc:
         }
 
         # name
-        text_id = xml_processData.find('./iolink:Name', namespaces=IoddXmlDoc.NAMESPACE).attrib.get('textId')
+        text_id = xml_processData.find('./iolink:Name', namespaces=self.namespaces).attrib.get('textId')
         pd_json['name'] = (text_id, self.__getTextForTextID(text_id))
 
         # data format
@@ -178,7 +191,7 @@ class IoddXmlDoc:
 
     def __getDatatypeAsJSON(self, xml_dataType):
         items = []
-        typeName = xml_dataType.get(f"{{{IoddXmlDoc.NAMESPACE['xsi']}}}type")
+        typeName = xml_dataType.get(f"{{{self.namespaces['xsi']}}}type")
 
         if typeName in ['RecordT', 'ArrayT']:
             # Complex data type
@@ -187,7 +200,7 @@ class IoddXmlDoc:
             # Simple data type
             item_json = {
                 'bitOffset': 0,
-                'data': IoddXmlDoc.__getSimpleDatatypeAsJSON(xml_dataType)
+                'data': self.__getSimpleDatatypeAsJSON(xml_dataType)
             }
             items.append(item_json)
 
@@ -196,7 +209,7 @@ class IoddXmlDoc:
     def __getRecordTypeAsJSON(self, xml_record_datatype):
         items = []
 
-        for recordItem in xml_record_datatype.xpath(".//iolink:RecordItem", namespaces=IoddXmlDoc.NAMESPACE):
+        for recordItem in xml_record_datatype.xpath(".//iolink:RecordItem", namespaces=self.namespaces):
             recordItem_json = {
                 'bitOffset': int(recordItem.get("bitOffset")),
                 'subIndex': int(recordItem.get("subindex")),
@@ -204,12 +217,12 @@ class IoddXmlDoc:
                 'data': None
             }
 
-            text_id = recordItem.find('./iolink:Name', namespaces=IoddXmlDoc.NAMESPACE).attrib.get('textId')
+            text_id = recordItem.find('./iolink:Name', namespaces=self.namespaces).attrib.get('textId')
             recordItem_json['name'] = (text_id, self.__getTextForTextID(text_id))
 
             dataType = self.__getDatatype(recordItem)
             if dataType is not None:
-                recordItem_json['data'] = IoddXmlDoc.__getSimpleDatatypeAsJSON(dataType)
+                recordItem_json['data'] = self.__getSimpleDatatypeAsJSON(dataType)
                 items.append(recordItem_json)
 
         return items
@@ -232,7 +245,7 @@ class IoddXmlDoc:
         return items
 
     def __getComplexDatatypeAsJSON(self, xml_complex_datatype):
-        typeName = xml_complex_datatype.get(f"{{{IoddXmlDoc.NAMESPACE['xsi']}}}type")
+        typeName = xml_complex_datatype.get(f"{{{self.namespaces['xsi']}}}type")
 
         if typeName == 'RecordT':
             return self.__getRecordTypeAsJSON(xml_complex_datatype)
@@ -241,13 +254,12 @@ class IoddXmlDoc:
         else:
             raise ValueError(f"Unsupported complex data type ({typeName}).")
 
-    @staticmethod
-    def __getSimpleDatatypeAsJSON(xml_simple_datatype):
+    def __getSimpleDatatypeAsJSON(self, xml_simple_datatype):
         datatype_json = {
             'type': None,
             'bitLength': 0
         }
-        simple_datatype_name = xml_simple_datatype.get(f"{{{IoddXmlDoc.NAMESPACE['xsi']}}}type")
+        simple_datatype_name = xml_simple_datatype.get(f"{{{self.namespaces['xsi']}}}type")
 
         if simple_datatype_name == 'BooleanT':
             datatype_json['type'] = bool

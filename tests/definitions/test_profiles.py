@@ -13,6 +13,6 @@ def test_profiles():
     assert profileID.name == 'Unknown'
     assert profileID.value == 0
 
-    profileID = ProfileID(32789)
-    assert profileID.name == 'NoName_32789'
-    assert profileID.value == 32789
+    profileID = ProfileID(32790)
+    assert profileID.name == 'NoName_32790'
+    assert profileID.value == 32790

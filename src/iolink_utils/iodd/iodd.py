@@ -30,12 +30,15 @@ class Iodd:
     def load(self, xml_file_path: str):
         self.filename = IoddFilename(xml_file_path)
         self.iodd_xml_doc = IoddXmlDoc(xml_file_path)
-
         self.document_info = self.iodd_xml_doc.get_document_info()
-        self.identity = self.iodd_xml_doc.get_identity()
-        self.features = self.iodd_xml_doc.get_device_features()
-        self.physical_layer = self.iodd_xml_doc.get_physical_layer()
-        self.process_data_definition = self.iodd_xml_doc.get_process_data_definition()
+
+        if self.iodd_xml_doc.docType == 'IODevice':
+            self.identity = self.iodd_xml_doc.get_identity()
+            self.features = self.iodd_xml_doc.get_device_features()
+            self.physical_layer = self.iodd_xml_doc.get_physical_layer()
+            self.process_data_definition = self.iodd_xml_doc.get_process_data_definition()
+        else:
+            pass
 
     def isSafetyDevice(self):
         return ProfileID.SafetyDevice in self.features.profileIDs

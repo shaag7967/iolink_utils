@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "iolink_utils"
+name = "iolink-utils"
 dynamic = ["version"]
 description = "helper and utilities for IO-Link"
 readme = "README.md"
@@ -27,8 +27,8 @@ dependencies = [
 ]
 
 [project.urls]
-GitHub = "https://github.com/shaag7967/iolink_utils"
-Homepage = "https://github.com/shaag7967/iolink_utils"
+GitHub = "https://github.com/shaag7967/iolink-utils"
+Homepage = "https://github.com/shaag7967/iolink-utils"
 
 [tool.hatch.version]
 path = "src/iolink_utils/__version__.py"
@@ -53,7 +53,7 @@ dependencies = [
 ]
 
 [[tool.hatch.envs.test.matrix]]
-python = ["3.8", "3.11"]
+python = ["3.8", "3.11", "3.13"]
 
 [tool.pytest.ini_options]
 addopts = [

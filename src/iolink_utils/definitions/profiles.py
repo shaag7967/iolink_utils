@@ -57,9 +57,9 @@ class ProfileID(IntEnum):
     MultiTeachDynamicExtension = 32786
     ObjectDetection = 32787
     QuantityDetection = 32788
-    NoName_32789 = 32789
+    QuantityDetectionAbsolute = 32789
     NoName_32790 = 32790
-    NoName_32791 = 32791
+    UncertaintyIndication = 32791
     ReservedSafety = 32800
     IOLWirelessBridge = 32816
     ExtendedIdentification = 33024
