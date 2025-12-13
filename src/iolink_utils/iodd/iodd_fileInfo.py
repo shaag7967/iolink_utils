@@ -22,7 +22,7 @@ class IoddFileInfo:
             self.date = datetime.strptime(match.group(1), "%Y%m%d").date()
             self.schemaVersion = Version(match.group(2))
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return (
             f"IoddFileInfo("
             f"fullPathFilename={self.fullPathFilename}, "
