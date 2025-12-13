@@ -95,7 +95,7 @@ def test_decoder_ConditionalProcessDataDevice():
     ###
     # condition 0
     ###
-    PDInDecoder_0 = createDecoderClass_PDIn(my_iodd.process_data_definition, 0)
+    PDInDecoder_0 = createDecoderClass_PDIn(my_iodd.processDataDefinition, 0)
     decoder = PDInDecoder_0()
 
     assert ['TN_PI_X_PDin_DetectionValue', 'TN_PI_X_PDin_TemperatureValue'] == list(decoder.field_names) # checks attributes
@@ -106,10 +106,22 @@ def test_decoder_ConditionalProcessDataDevice():
     assert decoder.TN_PI_X_PDin_DetectionValue == 65535
     assert decoder.TN_PI_X_PDin_TemperatureValue == 1
 
+    PDOutDecoder_0 = createDecoderClass_PDOut(my_iodd.processDataDefinition, 0)
+    decoder = PDOutDecoder_0()
+
+    assert ['TN_PO_X_PDout_ControlValue'] == list(decoder.field_names) # checks attributes
+    assert decoder.TN_PO_X_PDout_ControlValue == 0
+
+    decoder = PDOutDecoder_0.from_buffer_copy(b'\xFF\x00')
+    assert decoder.TN_PO_X_PDout_ControlValue == 255
+
+    decoder = PDOutDecoder_0.from_buffer_copy(b'\x00\xFF')
+    assert decoder.TN_PO_X_PDout_ControlValue == 0
+
     ###
     # condition 2
     ###
-    PDInDecoder_2 = createDecoderClass_PDIn(my_iodd.process_data_definition, 2)
+    PDInDecoder_2 = createDecoderClass_PDIn(my_iodd.processDataDefinition, 2)
     decoder = PDInDecoder_2()
 
     assert ['TN_PI_X_PDin_DetectionValue',

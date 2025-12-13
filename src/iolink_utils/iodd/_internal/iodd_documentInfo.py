@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from datetime import date
 from typing import Optional
 
-from .iodd_version import Version
+from iolink_utils.utils.version import Version
 
 
 @dataclass

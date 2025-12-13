@@ -1,3 +1,4 @@
+from typing import Optional
 from iolink_utils.definitions.bitRate import BitRate
 from iolink_utils.octetDecoder.octetDecoder import MSequenceCapability
 
@@ -5,11 +6,11 @@ from iolink_utils.octetDecoder.octetDecoder import MSequenceCapability
 class PhysicalLayer:
     def __init__(self):
         self.bitrate: BitRate = BitRate.Undefined
-        self.min_cycle_time = 0 # TODO use class for this and display ms value
+        self.min_cycle_time = 0
         self.sio_supported = False
-        self.m_sequence_capability: MSequenceCapability = MSequenceCapability()
+        self.m_sequence_capability: Optional[MSequenceCapability] = None
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return (
             f"PhysicalLayer("
             f"bitrate={self.bitrate.name} ({self.bitrate.value}), "

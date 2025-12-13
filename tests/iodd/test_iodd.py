@@ -1,5 +1,6 @@
 from pathlib import Path
 from iolink_utils.iodd.iodd import Iodd
+from iolink_utils.utils.version import Version
 
 
 def test_iodd_BasicDevice():
@@ -7,24 +8,31 @@ def test_iodd_BasicDevice():
     my_iodd = Iodd(str(test_dir.joinpath(
         'IODDViewer1.4_Examples/IO-Link-01-BasicDevice-20211215-IODD1.1.xml')))
 
-    assert my_iodd.filename.date.year == 2021
-    assert my_iodd.filename.date.month == 12
-    assert my_iodd.filename.date.day == 15
-    assert my_iodd.filename.date == my_iodd.document_info.releaseDate
+    assert my_iodd.fileInfo.fileExists
+    assert my_iodd.fileInfo.sizeInBytes > 0
 
-    assert len(my_iodd.process_data_definition.keys()) == 1
-    assert None in my_iodd.process_data_definition.keys()
+    assert my_iodd.fileInfo.date.year == 2021
+    assert my_iodd.fileInfo.date.month == 12
+    assert my_iodd.fileInfo.date.day == 15
+    assert my_iodd.fileInfo.date == my_iodd.documentInfo.releaseDate
+
+    assert my_iodd.fileInfo.schemaVersion == Version('1.1')
+
+    assert my_iodd.isSafetyDevice() == False
+
+    assert len(my_iodd.processDataDefinition.keys()) == 1
+    assert None in my_iodd.processDataDefinition.keys()
     assert None in my_iodd.processDataConditionValues
 
     assert my_iodd.size_OnRequestData == (2, 2)
 
-    assert my_iodd.size_PDIn == 1
-    assert len(my_iodd.process_data_definition[None]['pdIn']['dataFormat']) == 1
-    assert my_iodd.process_data_definition[None]['pdIn']['bitLength'] == 8
+    assert my_iodd.size_PDin == 1
+    assert len(my_iodd.processDataDefinition[None]['pdIn']['dataFormat']) == 1
+    assert my_iodd.processDataDefinition[None]['pdIn']['bitLength'] == 8
 
-    assert my_iodd.size_PDOut == 1
-    assert len(my_iodd.process_data_definition[None]['pdOut']['dataFormat']) == 1
-    assert my_iodd.process_data_definition[None]['pdOut']['bitLength'] == 8
+    assert my_iodd.size_PDout == 1
+    assert len(my_iodd.processDataDefinition[None]['pdOut']['dataFormat']) == 1
+    assert my_iodd.processDataDefinition[None]['pdOut']['bitLength'] == 8
 
 
 def test_iodd_ComplexProcessDataDevice():
@@ -32,19 +40,19 @@ def test_iodd_ComplexProcessDataDevice():
     my_iodd = Iodd(str(test_dir.joinpath(
         'IODDViewer1.4_Examples/IO-Link-17-ComplexProcessDataDevice-20211215-IODD1.1.xml')))
 
-    assert len(my_iodd.process_data_definition.keys()) == 1
-    assert None in my_iodd.process_data_definition.keys()
+    assert len(my_iodd.processDataDefinition.keys()) == 1
+    assert None in my_iodd.processDataDefinition.keys()
     assert None in my_iodd.processDataConditionValues
 
     assert my_iodd.size_OnRequestData == (2, 2)
 
-    assert my_iodd.size_PDIn == 4
-    assert len(my_iodd.process_data_definition[None]['pdIn']['dataFormat']) == 4
-    assert my_iodd.process_data_definition[None]['pdIn']['bitLength'] == 32
+    assert my_iodd.size_PDin == 4
+    assert len(my_iodd.processDataDefinition[None]['pdIn']['dataFormat']) == 4
+    assert my_iodd.processDataDefinition[None]['pdIn']['bitLength'] == 32
 
-    assert my_iodd.size_PDOut == 2
-    assert len(my_iodd.process_data_definition[None]['pdOut']['dataFormat']) == 3
-    assert my_iodd.process_data_definition[None]['pdOut']['bitLength'] == 16
+    assert my_iodd.size_PDout == 2
+    assert len(my_iodd.processDataDefinition[None]['pdOut']['dataFormat']) == 3
+    assert my_iodd.processDataDefinition[None]['pdOut']['bitLength'] == 16
 
 
 def test_iodd_ConditionalProcessDataDevice():
@@ -52,35 +60,35 @@ def test_iodd_ConditionalProcessDataDevice():
     my_iodd = Iodd(str(test_dir.joinpath(
         'IODDViewer1.4_Examples/IO-Link-22-ConditionalProcessDataDevice-20211215-IODD1.1.xml')))
 
-    assert len(my_iodd.process_data_definition.keys()) == 3
-    assert [0, 1, 2] == list(my_iodd.process_data_definition.keys())
+    assert len(my_iodd.processDataDefinition.keys()) == 3
+    assert [0, 1, 2] == list(my_iodd.processDataDefinition.keys())
     assert [0, 1, 2] == my_iodd.processDataConditionValues
 
     assert my_iodd.size_OnRequestData == (2, 2)
 
-    assert my_iodd.size_PDIn == 4
-    assert my_iodd.size_PDOut == 2
+    assert my_iodd.size_PDin == 4
+    assert my_iodd.size_PDout == 2
 
     # condition 0
-    assert len(my_iodd.process_data_definition[0]['pdIn']['dataFormat']) == 2
-    assert my_iodd.process_data_definition[0]['pdIn']['bitLength'] == 32
+    assert len(my_iodd.processDataDefinition[0]['pdIn']['dataFormat']) == 2
+    assert my_iodd.processDataDefinition[0]['pdIn']['bitLength'] == 32
 
-    assert len(my_iodd.process_data_definition[0]['pdOut']['dataFormat']) == 1
-    assert my_iodd.process_data_definition[0]['pdOut']['bitLength'] == 16
+    assert len(my_iodd.processDataDefinition[0]['pdOut']['dataFormat']) == 1
+    assert my_iodd.processDataDefinition[0]['pdOut']['bitLength'] == 16
 
     # condition 1
-    assert len(my_iodd.process_data_definition[1]['pdIn']['dataFormat']) == 4
-    assert my_iodd.process_data_definition[1]['pdIn']['bitLength'] == 32
+    assert len(my_iodd.processDataDefinition[1]['pdIn']['dataFormat']) == 4
+    assert my_iodd.processDataDefinition[1]['pdIn']['bitLength'] == 32
 
-    assert len(my_iodd.process_data_definition[1]['pdOut']['dataFormat']) == 1
-    assert my_iodd.process_data_definition[1]['pdOut']['bitLength'] == 16
+    assert len(my_iodd.processDataDefinition[1]['pdOut']['dataFormat']) == 1
+    assert my_iodd.processDataDefinition[1]['pdOut']['bitLength'] == 16
 
     # condition 2
-    assert len(my_iodd.process_data_definition[2]['pdIn']['dataFormat']) == 4
-    assert my_iodd.process_data_definition[2]['pdIn']['bitLength'] == 32
+    assert len(my_iodd.processDataDefinition[2]['pdIn']['dataFormat']) == 4
+    assert my_iodd.processDataDefinition[2]['pdIn']['bitLength'] == 32
 
-    assert len(my_iodd.process_data_definition[2]['pdOut']['dataFormat']) == 3
-    assert my_iodd.process_data_definition[2]['pdOut']['bitLength'] == 16
+    assert len(my_iodd.processDataDefinition[2]['pdOut']['dataFormat']) == 3
+    assert my_iodd.processDataDefinition[2]['pdOut']['bitLength'] == 16
 
 
 def test_iodd_DeviceVariants():

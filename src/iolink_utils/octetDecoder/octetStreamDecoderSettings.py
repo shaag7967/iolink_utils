@@ -31,13 +31,13 @@ class DecoderSettings:
     def fromIODD(iodd: Iodd):
         settings: DecoderSettings = DecoderSettings()
 
-        settings.transmissionRate = iodd.physical_layer.bitrate
+        settings.transmissionRate = iodd.physicalLayer.bitrate
         settings.startup = MSeqPayloadLength(pdOut=0, od=1, pdIn=0)
         settings.preoperate = MSeqPayloadLength(pdOut=0,
                                                 od=iodd.size_OnRequestData[0],
                                                 pdIn=0)
-        settings.operate = MSeqPayloadLength(pdOut=iodd.size_PDOut,
+        settings.operate = MSeqPayloadLength(pdOut=iodd.size_PDout,
                                              od=iodd.size_OnRequestData[1],
-                                             pdIn=iodd.size_PDIn)
+                                             pdIn=iodd.size_PDin)
 
         return settings

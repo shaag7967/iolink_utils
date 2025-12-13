@@ -41,7 +41,6 @@ def __create_field_from_data_format(json_dataFormat, safetyCodeFields):
     # Goes through all elements of the data format and creates fields with the specified length.
     # Sometimes we need to add a filler to bridge unused bits.
     fields = []
-    field_names = []
 
     bit_offset = 0
     for element in json_dataFormat:
@@ -59,9 +58,11 @@ def __create_field_from_data_format(json_dataFormat, safetyCodeFields):
             bit_offset += diff
 
         if e_value_type == bytearray:
-            if e_subIndex == 127 and e_length == 6*8:
+            if e_subIndex == 127 and e_length == 6*8:  # safety code has 6 bytes (crc32)
                 fields.extend(safetyCodeFields)
             else:
+                if e_length % 8 != 0:
+                    raise ValueError(f"Invalid bit count: {e_length} (not a multiple of 8)")
                 fields.append((e_name, ctypes.c_ubyte * int(e_length / 8)))
         else:
             if e_length <= 8:

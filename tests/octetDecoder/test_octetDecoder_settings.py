@@ -36,15 +36,15 @@ def test_octetDecoder_settingsFromIodd():
 
     class Iodd:
         def __init__(self):
-            self.physical_layer: PhysicalLayer = PhysicalLayer()
-            self.size_PDIn = 0
-            self.size_PDOut = 0
+            self.physicalLayer: PhysicalLayer = PhysicalLayer()
+            self.size_PDin = 0
+            self.size_PDout = 0
 
     iodd = Iodd()
-    iodd.physical_layer.bitrate = BitRate.COM2
-    iodd.size_PDOut = 2
+    iodd.physicalLayer.bitrate = BitRate.COM2
+    iodd.size_PDout = 2
     iodd.size_OnRequestData = [3, 4]
-    iodd.size_PDIn = 5
+    iodd.size_PDin = 5
     settings = DecoderSettings.fromIODD(iodd)
 
     assert settings.transmissionRate == BitRate.COM2

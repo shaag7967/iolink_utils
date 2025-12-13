@@ -1,67 +1,56 @@
-from typing import Optional, Tuple
+from typing import Dict, Tuple
 
-from .iodd_filename import IoddFilename
-from .iodd_documentInfo import DocumentInfo
-from .iodd_identity import Identity
-from .iodd_features import Features
-from .iodd_physical_layer import PhysicalLayer
-from .iodd_xmlDoc import IoddXmlDoc
+from .iodd_fileInfo import IoddFileInfo
+from ._internal.iodd_documentInfo import DocumentInfo
+from ._internal.iodd_identity import Identity
+from ._internal.iodd_features import Features
+from ._internal.iodd_physical_layer import PhysicalLayer
+from ._internal.iodd_xmlDoc import IoddXmlDoc
 
 from iolink_utils.definitions.onRequestDataOctetCount import ODOctetCount
 from iolink_utils.definitions.profiles import ProfileID
+from iolink_utils.exceptions import IoddFileNotFound, InvalidIoddFile, MSequenceCapabilityMissing
 
 
 class Iodd:
-    def __init__(self, iodd_xml_file_path: Optional[str] = None):
-        self.iodd_xml_doc = None
+    def __init__(self, iodd_xml_file_path: str):
+        self.fileInfo: IoddFileInfo = IoddFileInfo(iodd_xml_file_path)
 
-        self.filename = IoddFilename(iodd_xml_file_path)
-        self.document_info: DocumentInfo = DocumentInfo()
-        self.identity: Identity = Identity()
-        self.features: Features = Features()
-        self.physical_layer: PhysicalLayer = PhysicalLayer()
-        self.process_data_definition = {
-            None: {}
-        }
+        if not self.fileInfo.fileExists:
+            raise IoddFileNotFound(f"IODD file not found: {self.fileInfo.fullPathFilename}")
 
-        if iodd_xml_file_path is not None:
-            self.load(iodd_xml_file_path)
-
-    def load(self, xml_file_path: str):
-        self.filename = IoddFilename(xml_file_path)
-        self.iodd_xml_doc = IoddXmlDoc(xml_file_path)
-        self.document_info = self.iodd_xml_doc.get_document_info()
-
-        if self.iodd_xml_doc.docType == 'IODevice':
-            self.identity = self.iodd_xml_doc.get_identity()
-            self.features = self.iodd_xml_doc.get_device_features()
-            self.physical_layer = self.iodd_xml_doc.get_physical_layer()
-            self.process_data_definition = self.iodd_xml_doc.get_process_data_definition()
+        iodd_xml_doc = IoddXmlDoc(self.fileInfo.fullPathFilename)
+        if iodd_xml_doc.docType == 'IODevice':
+            self.documentInfo: DocumentInfo = iodd_xml_doc.get_document_info()
+            self.identity: Identity = iodd_xml_doc.get_identity()
+            self.features: Features = iodd_xml_doc.get_device_features()
+            self.physicalLayer: PhysicalLayer = iodd_xml_doc.get_physical_layer()
+            self.processDataDefinition: Dict = iodd_xml_doc.get_process_data_definition()
         else:
-            pass
+            raise InvalidIoddFile(f"Expected IODevice inside XML file, got {iodd_xml_doc.docType}.")
 
-    def isSafetyDevice(self):
+    def isSafetyDevice(self) -> bool:
         return ProfileID.SafetyDevice in self.features.profileIDs
 
     @property
-    def processDataConditionValues(self):
-        return list(self.process_data_definition.keys())
+    def processDataConditionValues(self) -> list:
+        return list(self.processDataDefinition.keys())
 
     @property
-    def size_PDIn(self):
+    def size_PDin(self) -> int:
         # note: by spec all process data definitions need to have the same size
         condition = self.processDataConditionValues[0]
-        if 'pdIn' in self.process_data_definition[condition]:
-            return int(self.process_data_definition[condition]['pdIn']['bitLength'] / 8)
+        if 'pdIn' in self.processDataDefinition[condition]:
+            return int(self.processDataDefinition[condition]['pdIn']['bitLength'] / 8)
         else:
             return 0
 
     @property
-    def size_PDOut(self):
+    def size_PDout(self) -> int:
         # note: by spec all process data definitions need to have the same size
         condition = self.processDataConditionValues[0]
-        if 'pdOut' in self.process_data_definition[condition]:
-            return int(self.process_data_definition[condition]['pdOut']['bitLength'] / 8)
+        if 'pdOut' in self.processDataDefinition[condition]:
+            return int(self.processDataDefinition[condition]['pdOut']['bitLength'] / 8)
         else:
             return 0
 
@@ -71,15 +60,19 @@ class Iodd:
         Returns number of on-request data octets in PREOPERATE and OPERATE
         :return: Tuple[preoperate, operate]
         """
-        ODsize_preoperate: int = ODOctetCount.in_preoperate(self.physical_layer.m_sequence_capability.preoperateCode)[0]
+        if self.physicalLayer.m_sequence_capability is None:
+            raise MSequenceCapabilityMissing("M-sequence capability required to calculate on-request data size.")
+
+        ODsize_preoperate: int = ODOctetCount.in_preoperate(self.physicalLayer.m_sequence_capability.preoperateCode)[0]
         ODsize_operate: int = ODOctetCount.in_operate(
-            self.physical_layer.m_sequence_capability.operateCode, self.size_PDIn, self.size_PDOut)[0]
+            self.physicalLayer.m_sequence_capability.operateCode, self.size_PDin, self.size_PDout)[0]
         return ODsize_preoperate, ODsize_operate
 
     def __str__(self):  # pragma: no cover
         return (
             f"IODD(\n"
+            f"  {self.fileInfo}\n"
             f"  {self.features}\n"
-            f"  {self.physical_layer}\n"
+            f"  {self.physicalLayer}\n"
             f")"
         )

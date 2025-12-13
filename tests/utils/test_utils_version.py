@@ -1,8 +1,8 @@
 import pytest
-from iolink_utils.iodd.iodd_version import Version
+from iolink_utils.utils.version import Version
 
 
-def test_iodd_version():
+def test_utils_version():
     ver = Version()
 
     assert str(ver) == "Version(V0.0.0.0)"
@@ -20,7 +20,7 @@ def test_iodd_version():
     assert Version("1.2.3") > Version("1.2.0")
 
 
-def test_iodd_version_invalid():
+def test_utils_version_invalid():
     with pytest.raises(ValueError):
         Version('1.a')
     with pytest.raises(ValueError):

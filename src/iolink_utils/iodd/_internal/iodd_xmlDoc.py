@@ -5,18 +5,16 @@ from datetime import date
 
 from .iodd_documentInfo import DocumentInfo
 from .iodd_identity import Identity, DeviceVariant
-from .iodd_version import Version
 from .iodd_features import Features
 from .iodd_physical_layer import PhysicalLayer
+
+from iolink_utils.utils.version import Version
 from iolink_utils.definitions.bitRate import BitRate
 from iolink_utils.definitions.profiles import ProfileID
 from iolink_utils.octetDecoder.octetDecoder import MSequenceCapability
 
 
 class IoddXmlDoc:
-    NAMESPACE = {"iolink": "http://www.io-link.com/IODD/2010/10",
-                 'xsi': 'http://www.w3.org/2001/XMLSchema-instance'}
-
     def __init__(self, iodd_xml_file_path: str):
         self.iodd_xml_doc = etree.parse(iodd_xml_file_path)
         root = self.iodd_xml_doc.getroot()
@@ -104,8 +102,7 @@ class IoddXmlDoc:
             physical_layer.sio_supported = xml_physical_layer.get("sioSupported") == "true"
 
             capa = xml_physical_layer.get("mSequenceCapability")
-            if capa:
-                physical_layer.m_sequence_capability = MSequenceCapability(int(capa))
+            physical_layer.m_sequence_capability = MSequenceCapability(int(capa)) if capa else None
 
         return physical_layer
 
