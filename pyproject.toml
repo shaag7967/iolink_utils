@@ -23,9 +23,7 @@ classifiers = [
     "Topic :: Software Development :: Libraries",
     "Topic :: Utilities",
 ]
-dependencies = [
-    "lxml == 6.0.2"
-]
+dependencies = []
 
 [project.urls]
 GitHub = "https://github.com/shaag7967/iolink-utils"
