@@ -1,6 +1,8 @@
 import pytest
-from iolink_utils.definitions._internal import MSeqPDSizeCombination, AutoNameConvertMeta
 from enum import IntEnum
+
+from iolink_utils.exceptions import EnumConversionError
+from iolink_utils.definitions._internal import MSeqPDSizeCombination, AutoNameConvertMeta
 
 
 def test_internal_MSeqPDSizeCombination():
@@ -45,8 +47,8 @@ def test_internal_autoNameConvertMeta():
     assert myEnum.name == 'EnumEntry3'
     assert myEnum.value == 333
 
-    with pytest.raises(ValueError):
+    with pytest.raises(EnumConversionError):
         MyIntEnum('abc')
 
-    with pytest.raises(ValueError):
+    with pytest.raises(EnumConversionError):
         MyIntEnum(4444)

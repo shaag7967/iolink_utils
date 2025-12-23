@@ -1,5 +1,7 @@
 import pytest
 from pathlib import Path
+
+from iolink_utils.exceptions import InvalidBitCount
 from iolink_utils.iodd.iodd import Iodd
 from iolink_utils.processDataDecoder.processDataDecoder import createDecoderClass_PDIn, createDecoderClass_PDOut
 
@@ -269,7 +271,7 @@ def test_processData_ArrayT():
                }
     }
 
-    with pytest.raises(ValueError):
+    with pytest.raises(InvalidBitCount):
         createDecoderClass_PDIn(invalid_process_data_definition)
 
 
@@ -306,5 +308,5 @@ def test_processData_intSizeTooLarge():
                }
     }
 
-    with pytest.raises(ValueError):
+    with pytest.raises(InvalidBitCount):
         createDecoderClass_PDIn(process_data_definition)

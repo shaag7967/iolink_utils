@@ -1,4 +1,6 @@
 import pytest
+
+from iolink_utils.exceptions import InvalidVersionStringFormat
 from iolink_utils.utils.version import Version
 
 
@@ -21,9 +23,9 @@ def test_utils_version():
 
 
 def test_utils_version_invalid():
-    with pytest.raises(ValueError):
+    with pytest.raises(InvalidVersionStringFormat):
         Version('1.a')
-    with pytest.raises(ValueError):
+    with pytest.raises(InvalidVersionStringFormat):
         Version('abc')
 
     assert Version('1').__eq__(1) == NotImplemented

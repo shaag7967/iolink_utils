@@ -1,4 +1,6 @@
 import pytest
+
+from iolink_utils.exceptions import EnumConversionError
 from iolink_utils.definitions.bitRate import BitRate
 
 
@@ -54,9 +56,9 @@ def test_bitrateFromName():
     assert bitrate.value == 230400
 
 def test_bitrateErrors():
-    with pytest.raises(ValueError):
+    with pytest.raises(EnumConversionError):
         BitRate('COM7')
-    with pytest.raises(ValueError):
+    with pytest.raises(EnumConversionError):
         BitRate('234')
-    with pytest.raises(ValueError):
+    with pytest.raises(EnumConversionError):
         BitRate(111)

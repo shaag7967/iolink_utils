@@ -1,5 +1,6 @@
 import pytest
 
+from iolink_utils.exceptions import InvalidMSeqCode
 from iolink_utils.octetStreamDecoder.octetStreamDecoderSettings import MSeqPayloadLength, DecoderSettings
 from iolink_utils.definitions.bitRate import BitRate
 
@@ -26,7 +27,7 @@ def test_octetDecoder_settings():
     assert settings.getPayloadLength(2).od == 8
     assert settings.getPayloadLength(2).pdIn == 9
 
-    with pytest.raises(ValueError):
+    with pytest.raises(InvalidMSeqCode):
         settings.getPayloadLength(3)
 
 def test_octetDecoder_settingsFromIodd():

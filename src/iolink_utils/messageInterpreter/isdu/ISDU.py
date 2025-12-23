@@ -2,6 +2,7 @@ from enum import IntEnum
 from datetime import datetime as dt
 from abc import abstractmethod
 
+from iolink_utils.exceptions import InvalidFlowControlValue
 from iolink_utils.octetDecoder.octetDecoder import IService
 from iolink_utils.messageInterpreter.transaction import Transaction
 
@@ -45,7 +46,7 @@ class FlowCtrl:
                 self.value = value
                 return
 
-        raise ValueError(f"Invalid FlowCtrl value: {value}")
+        raise InvalidFlowControlValue(f"Invalid FlowCtrl value: {value}")
 
 
 class ISDU(Transaction):
