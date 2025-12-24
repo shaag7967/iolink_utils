@@ -9,11 +9,13 @@ class TransactionPage(Transaction):
         self.start_time: dt = dt(1970, 1, 1)
         self.end_time: dt = dt(1970, 1, 1)
 
+        self.direction: str = '??'
         self.name: str = name
         self.value: str = value
 
     def data(self) -> Dict:
         return {
+            'dir': self.direction,
             'page': ' '.join(filter(None, [self.name, self.value]))
         }
 
@@ -21,4 +23,4 @@ class TransactionPage(Transaction):
         return handler.handlePage(self)
 
     def __str__(self):
-        return f"Page: {' '.join(filter(None, [self.name, self.value]))}"
+        return f"Page {self.direction}: {' '.join(filter(None, [self.name, self.value]))}"

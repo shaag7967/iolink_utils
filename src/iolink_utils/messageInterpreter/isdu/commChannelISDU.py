@@ -60,16 +60,12 @@ class CommChannelISDU:
             if self.flowCtrl.state == FlowCtrl.State.Start and self.direction == TransmissionDirection.Read:
                 self.responseStartTime = message.start_time
 
-        return []
-
     def handleDeviceMessage(self, message: DeviceMessage):
-        isduTransactions = []
-
         if self.state == CommChannelISDU.State.RequestFinished:
             self.isduRequest.setEndTime(message.end_time)
 
-            isduTransactions.append(self.isduRequest)
             self.state = CommChannelISDU.State.WaitForResponse
+            return self.isduRequest
 
         elif self.state == CommChannelISDU.State.WaitForResponse:
             if self.flowCtrl.state == FlowCtrl.State.Start:
@@ -81,8 +77,8 @@ class CommChannelISDU:
                     self.isduResponse.appendOctets(self.flowCtrl, message.od)
 
                     if self.isduResponse.isComplete:
-                        isduTransactions.append(self.isduResponse)
                         self.state = CommChannelISDU.State.Idle
+                        return self.isduResponse
                     else:
                         self.state = CommChannelISDU.State.Response
 
@@ -92,10 +88,8 @@ class CommChannelISDU:
                 self.isduResponse.appendOctets(self.flowCtrl, message.od)
 
                 if self.isduResponse.isComplete:
-                    isduTransactions.append(self.isduResponse)
                     self.state = CommChannelISDU.State.Idle
+                    return self.isduResponse
 
             elif self.flowCtrl.state == FlowCtrl.State.Abort:
                 self.state = CommChannelISDU.State.Idle
-
-        return isduTransactions

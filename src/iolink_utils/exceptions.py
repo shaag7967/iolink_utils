@@ -80,5 +80,3 @@ class InvalidISDUService(IOLinkUtilsException):
 
 class InvalidBitCount(IOLinkUtilsException):
     """Raised if the number of bits is not as expected"""
-
-

@@ -1,6 +1,6 @@
-from typing import List
 from datetime import datetime as dt
 
+from iolink_utils.exceptions import InvalidOctetValue
 from iolink_utils.octetStreamDecoder.octetStreamDecoderMessages import DeviceMessage, MasterMessage
 from iolink_utils.definitions.directParameterPage import DirectParameterPage1Index
 from iolink_utils.definitions.masterCommand import MasterCommand
@@ -44,30 +44,38 @@ class CommChannelPage:
     def _handleMasterCommand(self):
         if self.direction == TransmissionDirection.Write:
             return TransactionPage("MasterCommand", MasterCommand(self.octet).name)
+        else:
+            return TransactionPage("MasterCommand", f'Invalid {hex(self.octet)} (Read)')
 
     def _handleMasterCycleTime(self):
         cto = CycleTimeOctet.from_buffer_copy(bytes([self.octet]), 0)
-        return TransactionPage("MasterCycleTime", f"{CycleTime.decodeToTimeInMs(cto)}ms")
+        try:
+            return TransactionPage("MasterCycleTime", f"{CycleTime.decodeToTimeInMs(cto)}ms")
+        except InvalidOctetValue:
+            return TransactionPage("MasterCycleTime", f'invalid: {hex(self.octet)}')
 
     def _handleMinCycleTime(self):
         cto = CycleTimeOctet.from_buffer_copy(bytes([self.octet]), 0)
-        return TransactionPage("MinCycleTime", f"{CycleTime.decodeToTimeInMs(cto)}ms")
+        try:
+            return TransactionPage("MinCycleTime", f"{CycleTime.decodeToTimeInMs(cto)}ms")
+        except InvalidOctetValue:
+            return TransactionPage("MinCycleTime", f'invalid: {hex(self.octet)}')
 
     def _handleMSeqCapability(self):
         val = MSequenceCapability.from_buffer_copy(bytes([self.octet]), 0)
-        return TransactionPage("MSequenceCapability", str(val))
+        return TransactionPage(str(val), '')
 
     def _handleRevisionId(self):
         val = RevisionId.from_buffer_copy(bytes([self.octet]), 0)
-        return TransactionPage("RevisionID", str(val))
+        return TransactionPage(str(val), '')
 
     def _handlePDIn(self):
         val = ProcessDataIn.from_buffer_copy(bytes([self.octet]), 0)
-        return TransactionPage("ProcessDataIn", str(val))
+        return TransactionPage(str(val), '')
 
     def _handlePDOut(self):
         val = ProcessDataOut.from_buffer_copy(bytes([self.octet]), 0)
-        return TransactionPage("ProcessDataOut", str(val))
+        return TransactionPage(str(val), '')
 
     def _handleHexValue(self, label):
         return TransactionPage(label, bytes([self.octet]).hex())
@@ -75,8 +83,10 @@ class CommChannelPage:
     def _handleSystemCommand(self):
         if self.direction == TransmissionDirection.Write:
             return TransactionPage("SystemCommand", SystemCommand(self.octet).name)
+        else:
+            return TransactionPage("SystemCommand", f'Invalid {hex(self.octet)} (Read)')
 
-    def handleMasterMessage(self, message: MasterMessage):
+    def handleMasterMessage(self, message: MasterMessage) -> None:
         self.start_time = message.start_time
         self.end_time = message.end_time
 
@@ -84,21 +94,20 @@ class CommChannelPage:
         self.pageIndex = message.mc.address
         self.octet = message.od[0] if self.direction == TransmissionDirection.Write else 0
 
-        return []
+        return None
 
-    def handleDeviceMessage(self, message: DeviceMessage) -> List[TransactionPage]:
+    def handleDeviceMessage(self, message: DeviceMessage) -> TransactionPage:
         self.end_time = message.end_time
         if self.direction == TransmissionDirection.Read:
             self.octet = message.od[0]
 
         handler = self._pageIndexHandler.get(self.pageIndex)
-        if handler is None:
-            return []
+        transaction = handler() if handler else TransactionPage(
+            f"DirectParameterPage1 '{self.pageIndex}' unhandled:",
+            bytes([self.octet]).hex()
+        )
+        transaction.direction = self.direction.name
+        transaction.start_time = self.start_time
+        transaction.end_time = self.end_time
 
-        transaction = handler()
-        if transaction:
-            transaction.start_time = self.start_time
-            transaction.end_time = self.end_time
-            return [transaction]
-
-        return []
+        return transaction
