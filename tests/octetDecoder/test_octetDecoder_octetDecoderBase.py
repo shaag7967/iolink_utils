@@ -9,26 +9,30 @@ def test_octetDecoder_octetDecoderBase():
         _fields_ = [
             ("field_1", ctypes.c_uint8, 1),
             ("field_2", ctypes.c_uint8, 2),
-            ("field_3", ctypes.c_uint8, 5)
+            ("unused", ctypes.c_uint8, 1),
+            ("field_3", ctypes.c_uint8, 4)
         ]
 
     myOctet = MyOctet()
+    assert myOctet.valuesAsString() == "field_1=0, field_2=0, field_3=0"
     assert myOctet.field_1 == 0
     assert myOctet.field_2 == 0
     assert myOctet.field_3 == 0
 
     myOctet = MyOctet(0b10011111)
+    assert myOctet.valuesAsString() == "field_1=1, field_2=0, field_3=15"
     assert myOctet.field_1 == 0b1
     assert myOctet.field_2 == 0
-    assert myOctet.field_3 == 0b11111
+    assert myOctet.field_3 == 0b1111
 
     assert myOctet.get() == 0b10011111
     assert int(myOctet) == 0b10011111
 
     myOctet.set(0b01101010)
+    assert myOctet.valuesAsString() == "field_1=0, field_2=3, field_3=10"
     assert myOctet.field_1 == 0
     assert myOctet.field_2 == 0b11
-    assert myOctet.field_3 == 0b01010
+    assert myOctet.field_3 == 0b1010
 
     assert int(myOctet) == 0b01101010
 

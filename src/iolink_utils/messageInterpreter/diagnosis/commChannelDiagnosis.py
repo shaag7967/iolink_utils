@@ -23,6 +23,9 @@ class CommChannelDiagnosis:
         self.eventMemory: EventMemory = EventMemory()
         self.eventMemoryIndex: int = 0
 
+    def reset(self) -> None:
+        self.state = CommChannelDiagnosis.State.Idle
+
     def handleMasterMessage(self, message: MasterMessage):
         self.eventMemoryIndex = message.mc.address
 
