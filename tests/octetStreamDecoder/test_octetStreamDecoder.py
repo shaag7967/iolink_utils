@@ -18,13 +18,13 @@ def test_octetStreamDecoder_ctor():
     settings.operate = MSeqPayloadLength(pdOut=7, od=2, pdIn=10)
 
     decoder = OctetStreamDecoder(settings)
-    assert decoder.settings is not settings
+    assert decoder._settings is not settings
 
-    settings.transmissionRate = BitRate.COM3  # change source of settings
-    assert decoder.settings.transmissionRate == BitRate.COM2  # -> decoder has a copy
-    assert decoder.settings != settings  # we changed transmissionRate
+    settings.transmissionRate = BitRate.COM3  # change source
+    assert decoder._settings.transmissionRate == BitRate.COM2  # -> decoder has a copy
+    assert decoder._settings != settings  # we changed transmissionRate
 
-    assert decoder.state == DecodingState.Idle
+    assert decoder._state == DecodingState.Idle
 
 
 def test_octetStreamDecoder_MSequence_startup():
@@ -43,18 +43,18 @@ def test_octetStreamDecoder_MSequence_startup():
         """)
 
     decoder = OctetStreamDecoder(settings)
-    assert decoder.state == DecodingState.Idle
+    assert decoder._state == DecodingState.Idle
 
     num = 0
     message = decoder.processOctet(testData[num]['value'], testData[num]['start'], testData[num]['end'])
     assert message is None
-    assert decoder.state == DecodingState.MasterMessage
+    assert decoder._state == DecodingState.MasterMessage
 
     num += 1
     message = decoder.processOctet(testData[num]['value'], testData[num]['start'], testData[num]['end'])
     assert issubclass(type(message), Message)
     assert isinstance(message, MasterMessage)
-    assert decoder.state == DecodingState.DeviceResponseDelay
+    assert decoder._state == DecodingState.DeviceResponseDelay
 
     assert TransmissionDirection(message.mc.read) == TransmissionDirection.Read
     assert CommChannel(message.mc.channel) == CommChannel.Page
@@ -68,13 +68,13 @@ def test_octetStreamDecoder_MSequence_startup():
     num += 1
     message = decoder.processOctet(testData[num]['value'], testData[num]['start'], testData[num]['end'])
     assert message is None
-    assert decoder.state == DecodingState.DeviceMessage
+    assert decoder._state == DecodingState.DeviceMessage
 
     num += 1
     message = decoder.processOctet(testData[num]['value'], testData[num]['start'], testData[num]['end'])
     assert issubclass(type(message), Message)
     assert isinstance(message, DeviceMessage)
-    assert decoder.state == DecodingState.Idle
+    assert decoder._state == DecodingState.Idle
 
     assert message.channel() is None  # DeviceMessage has no channel info (only MasterMessage has it)
     assert message.isValid
@@ -100,24 +100,24 @@ def test_octetStreamDecoder_reset():
         """)
 
     decoder = OctetStreamDecoder(settings)
-    assert decoder.state == DecodingState.Idle
+    assert decoder._state == DecodingState.Idle
 
     num = 0
     message = decoder.processOctet(testData[num]['value'], testData[num]['start'], testData[num]['end'])
     assert message is None
-    assert decoder.state == DecodingState.MasterMessage
+    assert decoder._state == DecodingState.MasterMessage
     num += 1
     message = decoder.processOctet(testData[num]['value'], testData[num]['start'], testData[num]['end'])
     assert isinstance(message, MasterMessage)
-    assert decoder.state == DecodingState.DeviceResponseDelay
+    assert decoder._state == DecodingState.DeviceResponseDelay
 
     decoder.reset()
-    assert decoder.state == DecodingState.Idle
+    assert decoder._state == DecodingState.Idle
 
     num = 0
     message = decoder.processOctet(testData[num]['value'], testData[num]['start'], testData[num]['end'])
     assert message is None
-    assert decoder.state == DecodingState.MasterMessage
+    assert decoder._state == DecodingState.MasterMessage
 
 
 def test_octetStreamDecoder_MSequence_startupToPreoperate():
@@ -147,22 +147,22 @@ def test_octetStreamDecoder_MSequence_startupToPreoperate():
         """)
 
     decoder = OctetStreamDecoder(settings)
-    assert decoder.state == DecodingState.Idle
+    assert decoder._state == DecodingState.Idle
 
     num = 0
     message = decoder.processOctet(testData[num]['value'], testData[num]['start'], testData[num]['end'])
     assert message is None
-    assert decoder.state == DecodingState.MasterMessage
+    assert decoder._state == DecodingState.MasterMessage
 
     num = 1
     message = decoder.processOctet(testData[num]['value'], testData[num]['start'], testData[num]['end'])
     assert message is None
-    assert decoder.state == DecodingState.MasterMessage
+    assert decoder._state == DecodingState.MasterMessage
 
     num = 2
     message = decoder.processOctet(testData[num]['value'], testData[num]['start'], testData[num]['end'])
     assert isinstance(message, MasterMessage)
-    assert decoder.state == DecodingState.DeviceResponseDelay
+    assert decoder._state == DecodingState.DeviceResponseDelay
 
     assert TransmissionDirection(message.mc.read) == TransmissionDirection.Write
     assert CommChannel(message.mc.channel) == CommChannel.Page
@@ -176,7 +176,7 @@ def test_octetStreamDecoder_MSequence_startupToPreoperate():
     num = 3
     message = decoder.processOctet(testData[num]['value'], testData[num]['start'], testData[num]['end'])
     assert isinstance(message, DeviceMessage)
-    assert decoder.state == DecodingState.Idle
+    assert decoder._state == DecodingState.Idle
     assert message.isValid
 
     # now we are in preoperate
@@ -184,12 +184,12 @@ def test_octetStreamDecoder_MSequence_startupToPreoperate():
     num += 1
     message = decoder.processOctet(testData[num]['value'], testData[num]['start'], testData[num]['end'])
     assert message is None
-    assert decoder.state == DecodingState.MasterMessage
+    assert decoder._state == DecodingState.MasterMessage
 
     num += 1
     message = decoder.processOctet(testData[num]['value'], testData[num]['start'], testData[num]['end'])
     assert isinstance(message, MasterMessage)
-    assert decoder.state == DecodingState.DeviceResponseDelay
+    assert decoder._state == DecodingState.DeviceResponseDelay
     assert TransmissionDirection(message.mc.read) == TransmissionDirection.Read
     assert CommChannel(message.mc.channel) == CommChannel.ISDU
     assert MSeqType(message.ckt.mSeqType) == MSeqType.Type_1_PREOPERATE
@@ -198,20 +198,20 @@ def test_octetStreamDecoder_MSequence_startupToPreoperate():
     assert len(message.pdOut) == 0
     assert len(message.od) == 0
 
-    for i in range(decoder.settings.preoperate.od):
+    for i in range(decoder._settings.preoperate.od):
         num += 1
         message = decoder.processOctet(testData[num]['value'], testData[num]['start'], testData[num]['end'])
         assert message is None
-        assert decoder.state == DecodingState.DeviceMessage
+        assert decoder._state == DecodingState.DeviceMessage
 
     num += 1
     message = decoder.processOctet(testData[num]['value'], testData[num]['start'], testData[num]['end'])
     assert isinstance(message, DeviceMessage)
     assert message.cks.eventFlag == 1
-    assert decoder.state == DecodingState.Idle
+    assert decoder._state == DecodingState.Idle
 
     assert len(message.pdIn) == 0
-    assert len(message.od) == decoder.settings.preoperate.od
+    assert len(message.od) == decoder._settings.preoperate.od
 
 
 def test_octetStreamDecoder_MSequence_operate():
@@ -248,54 +248,54 @@ def test_octetStreamDecoder_MSequence_operate():
         """)
 
     decoder = OctetStreamDecoder(settings)
-    assert decoder.state == DecodingState.Idle
+    assert decoder._state == DecodingState.Idle
 
     # MASTER message
     num = 0
     message = decoder.processOctet(testData[num]['value'], testData[num]['start'], testData[num]['end'])
     assert message is None
-    assert decoder.state == DecodingState.MasterMessage
+    assert decoder._state == DecodingState.MasterMessage
 
     num += 1
     message = decoder.processOctet(testData[num]['value'], testData[num]['start'], testData[num]['end'])
     assert message is None
-    assert decoder.state == DecodingState.MasterMessage
+    assert decoder._state == DecodingState.MasterMessage
 
     # pd out
-    for i in range(decoder.settings.operate.pdOut):
+    for i in range(decoder._settings.operate.pdOut):
         num += 1
         message = decoder.processOctet(testData[num]['value'], testData[num]['start'], testData[num]['end'])
         assert message is None
-        assert decoder.state == DecodingState.MasterMessage
+        assert decoder._state == DecodingState.MasterMessage
 
     # od
     num += 1
     message = decoder.processOctet(testData[num]['value'], testData[num]['start'], testData[num]['end'])
     assert message is None
-    assert decoder.state == DecodingState.MasterMessage
+    assert decoder._state == DecodingState.MasterMessage
 
     num += 1
     message = decoder.processOctet(testData[num]['value'], testData[num]['start'], testData[num]['end'])
     assert isinstance(message, MasterMessage)
-    assert decoder.state == DecodingState.DeviceResponseDelay
+    assert decoder._state == DecodingState.DeviceResponseDelay
 
     assert TransmissionDirection(message.mc.read) == TransmissionDirection.Write
     assert MSeqType(message.ckt.mSeqType) == MSeqType.Type_2_OPERATE
 
-    assert len(message.pdOut) == decoder.settings.operate.pdOut
-    assert len(message.od) == decoder.settings.operate.od
+    assert len(message.pdOut) == decoder._settings.operate.pdOut
+    assert len(message.od) == decoder._settings.operate.od
 
     # DEVICE message
-    for i in range(decoder.settings.operate.pdIn):
+    for i in range(decoder._settings.operate.pdIn):
         num += 1
         message = decoder.processOctet(testData[num]['value'], testData[num]['start'], testData[num]['end'])
         assert message is None
-        assert decoder.state == DecodingState.DeviceMessage
+        assert decoder._state == DecodingState.DeviceMessage
 
     num += 1
     message = decoder.processOctet(testData[num]['value'], testData[num]['start'], testData[num]['end'])
     assert isinstance(message, DeviceMessage)
-    assert decoder.state == DecodingState.Idle
+    assert decoder._state == DecodingState.Idle
 
-    assert len(message.pdIn) == decoder.settings.operate.pdIn
+    assert len(message.pdIn) == decoder._settings.operate.pdIn
     assert len(message.od) == 0 # when writing

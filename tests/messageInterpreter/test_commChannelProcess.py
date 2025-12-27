@@ -18,8 +18,8 @@ def test_commChannelProcess_handleMasterMessage():
     channel = CommChannelProcess()
 
     masterMsg = MasterMessage()
-    masterMsg.start_time = dt(1999, 1, 2)
-    masterMsg.end_time = dt(2000, 3, 4)
+    masterMsg.startTime = dt(1999, 1, 2)
+    masterMsg.endTime = dt(2000, 3, 4)
     masterMsg.mc.read = 0  # write
 
     transaction: TransactionProcess = channel.handleMasterMessage(masterMsg)
@@ -33,8 +33,8 @@ def test_commChannelProcess_handleDeviceMessage():
     channel = CommChannelProcess()
 
     deviceMsg = DeviceMessage()
-    deviceMsg.start_time = dt(2000, 5, 6)
-    deviceMsg.end_time = dt(2001, 7, 8)
+    deviceMsg.startTime = dt(2000, 5, 6)
+    deviceMsg.endTime = dt(2001, 7, 8)
 
     transaction: TransactionProcess = channel.handleDeviceMessage(deviceMsg)
 

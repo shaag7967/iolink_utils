@@ -8,9 +8,9 @@ from iolink_utils.messageInterpreter.transaction import Transaction
 
 
 class TransactionDiagEventMemory(Transaction):
-    def __init__(self, start_time: dt, end_time: dt, eventMemory: EventMemory):
+    def __init__(self, startTime: dt, endTime: dt, eventMemory: EventMemory):
         super().__init__()
-        self.setTime(start_time, end_time)
+        self.setTime(startTime, endTime)
         self.eventMemory: EventMemory = copy.deepcopy(eventMemory)
 
     def _getEvents(self):
@@ -44,9 +44,9 @@ class TransactionDiagEventMemory(Transaction):
 
 
 class TransactionDiagEventReset(Transaction):
-    def __init__(self, start_time: dt, end_time: dt):
+    def __init__(self, startTime: dt, endTime: dt):
         super().__init__()
-        self.setTime(start_time, end_time)
+        self.setTime(startTime, endTime)
 
     def data(self) -> Dict:
         return {}

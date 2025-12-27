@@ -75,18 +75,26 @@ class EventMemory:
     BYTES_PER_EVENT = 3
 
     def __init__(self):
-        self.statusCode: StatusCodeType2 = StatusCodeType2()
-        self.events: tuple[Event, ...] = (
+        self._statusCode: StatusCodeType2 = StatusCodeType2()
+        self._events: tuple[Event, ...] = (
             Event(), Event(), Event(), Event(), Event(), Event()
         )
+
+    @property
+    def statusCode(self) -> StatusCodeType2:
+        return self._statusCode
+
+    @property
+    def events(self) -> tuple[Event, ...]:
+        return self._events
 
     def setMemory(self, address: int, value: int):
         if address > 0x12:  # See Table 58 – Event memory
             raise InvalidEventMemoryAddress(f"Address is invalid: {address} (max 0x12)")
 
         if address == 0:
-            self.statusCode = StatusCodeType2(value)
-            if self.statusCode.details == 0:
+            self._statusCode = StatusCodeType2(value)
+            if self._statusCode.details == 0:
                 raise InvalidEventStatusCode(f"StatusCodeType2 required (details == 1). Got value '{value}'")
         else:
             eventsByteAddress = address - 1
@@ -94,31 +102,31 @@ class EventMemory:
             byteNumber = eventsByteAddress % EventMemory.BYTES_PER_EVENT
 
             if byteNumber == 0:
-                self.events[eventNumber].setQualifier(EventQualifier(value))
+                self._events[eventNumber].setQualifier(EventQualifier(value))
             elif byteNumber == 1:
-                self.events[eventNumber].setCodeMSB(value)
+                self._events[eventNumber].setCodeMSB(value)
             elif byteNumber == 2:
-                self.events[eventNumber].setCodeLSB(value)
+                self._events[eventNumber].setCodeLSB(value)
 
     def clear(self):
-        self.statusCode = StatusCodeType2()
-        for event in self.events:
+        self._statusCode = StatusCodeType2()
+        for event in self._events:
             event.clear()
 
     def isComplete(self) -> bool:
-        if self.statusCode.details == 0:
+        if self._statusCode.details == 0:
             return False
         # event memory is complete if all active events are complete (have all 3 bytes)
         return all(
             not active or event.isComplete() for active, event in zip(
-                (self.statusCode.evt1, self.statusCode.evt2, self.statusCode.evt3,
-                 self.statusCode.evt4, self.statusCode.evt5, self.statusCode.evt6), self.events)
+                (self._statusCode.evt1, self._statusCode.evt2, self._statusCode.evt3,
+                 self._statusCode.evt4, self._statusCode.evt5, self._statusCode.evt6), self._events)
         )
 
     def copy(self) -> "EventMemory":
         new = EventMemory()
-        new.statusCode = self.statusCode.copy()
-        new.events = tuple(event.copy() for event in self.events)
+        new._statusCode = self._statusCode.copy()
+        new._events = tuple(event.copy() for event in self._events)
         return new
 
     def __copy__(self):  # pragma: no cover

@@ -1,6 +1,6 @@
 from iolink_utils.exceptions import InvalidISDUService
 from iolink_utils.octetDecoder.octetDecoder import IService
-from iolink_utils.messageInterpreter.isdu.ISDU import IServiceNibble, FlowCtrl, ISDU
+from iolink_utils.messageInterpreter.isdu.ISDU import IServiceNibble, FlowControl, ISDU
 
 
 #
@@ -13,12 +13,12 @@ class ISDUResponse_WriteResp_M(ISDU):
         self.errorCode: int = 0
         self.additionalCode: int = 0
 
-    def appendOctets(self, flowCtrl: FlowCtrl, requestData: bytearray) -> bool:
-        finished = super().appendOctets(flowCtrl, requestData)
+    def appendOctets(self, flowControl: FlowControl, requestData: bytearray) -> bool:
+        finished = super().appendOctets(flowControl, requestData)
 
         if finished:
-            self.errorCode = int(self.rawData[1])
-            self.additionalCode = int(self.rawData[2])
+            self.errorCode = int(self._rawData[1])
+            self.additionalCode = int(self._rawData[2])
         return finished
 
     def name(self) -> str:
@@ -36,15 +36,15 @@ class ISDUResponse_WriteResp_M(ISDU):
 
     def __str__(self):  # pragma: no cover
         return (f"ISDUResponse_WriteResp_M(errorCode={self.errorCode} "
-                f"additionalCode={self.additionalCode} data={self.rawData.hex()})")
+                f"additionalCode={self.additionalCode} data={self._rawData.hex()})")
 
 
 class ISDUResponse_WriteResp_P(ISDU):
     def __init__(self, iService: IService):
         super().__init__(iService)
 
-    def appendOctets(self, flowCtrl: FlowCtrl, requestData: bytearray) -> bool:
-        return super().appendOctets(flowCtrl, requestData)
+    def appendOctets(self, flowControl: FlowControl, requestData: bytearray) -> bool:
+        return super().appendOctets(flowControl, requestData)
 
     def name(self) -> str:
         return 'WriteResp_P'
@@ -58,7 +58,7 @@ class ISDUResponse_WriteResp_P(ISDU):
         return handler.handleISDU(self)
 
     def __str__(self):  # pragma: no cover
-        return f"ISDUResponse_WriteResp_P(data={self.rawData.hex()})"
+        return f"ISDUResponse_WriteResp_P(data={self._rawData.hex()})"
 
 
 #
@@ -71,12 +71,12 @@ class ISDUResponse_ReadResp_M(ISDU):
         self.errorCode: int = 0
         self.additionalCode: int = 0
 
-    def appendOctets(self, flowCtrl: FlowCtrl, requestData: bytearray) -> bool:
-        finished = super().appendOctets(flowCtrl, requestData)
+    def appendOctets(self, flowControl: FlowControl, requestData: bytearray) -> bool:
+        finished = super().appendOctets(flowControl, requestData)
 
         if finished:
-            self.errorCode = int(self.rawData[1])
-            self.additionalCode = int(self.rawData[2])
+            self.errorCode = int(self._rawData[1])
+            self.additionalCode = int(self._rawData[2])
         return finished
 
     def name(self) -> str:
@@ -94,15 +94,15 @@ class ISDUResponse_ReadResp_M(ISDU):
 
     def __str__(self):  # pragma: no cover
         return (f"ISDUResponse_ReadResp_M(errorCode={self.errorCode} "
-                f"additionalCode={self.additionalCode} data={self.rawData.hex()})")
+                f"additionalCode={self.additionalCode} data={self._rawData.hex()})")
 
 
 class ISDUResponse_ReadResp_P(ISDU):
     def __init__(self, iService: IService):
         super().__init__(iService)
 
-    def appendOctets(self, flowCtrl: FlowCtrl, requestData: bytearray) -> bool:
-        return super().appendOctets(flowCtrl, requestData)
+    def appendOctets(self, flowControl: FlowControl, requestData: bytearray) -> bool:
+        return super().appendOctets(flowControl, requestData)
 
     def name(self) -> str:
         return 'ReadResp_P'
@@ -110,14 +110,14 @@ class ISDUResponse_ReadResp_P(ISDU):
     def data(self) -> dict:
         return {
             'valid': self.isValid,
-            'data': self.rawData[2:-1] if self._hasExtendedLength() else self.rawData[1:-1]
+            'data': self._rawData[2:-1] if self._hasExtendedLength() else self._rawData[1:-1]
         }
 
     def dispatch(self, handler):
         return handler.handleISDU(self)
 
     def __str__(self):  # pragma: no cover
-        return f"ISDUResponse_ReadResp_P(data={self.rawData.hex()})"
+        return f"ISDUResponse_ReadResp_P(data={self._rawData.hex()})"
 
 
 def createISDUResponse(iService: IService):

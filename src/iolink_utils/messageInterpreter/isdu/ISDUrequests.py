@@ -1,6 +1,6 @@
 from iolink_utils.exceptions import InvalidISDUService
 from iolink_utils.octetDecoder.octetDecoder import IService
-from iolink_utils.messageInterpreter.isdu.ISDU import IServiceNibble, FlowCtrl, ISDU
+from iolink_utils.messageInterpreter.isdu.ISDU import IServiceNibble, FlowControl, ISDU
 
 
 #
@@ -12,12 +12,12 @@ class ISDURequest_Write8bitIdx(ISDU):
         super().__init__(iService)
         self.index: int = 0
 
-    def appendOctets(self, flowCtrl: FlowCtrl, requestData: bytearray) -> bool:
-        finished = super().appendOctets(flowCtrl, requestData)
+    def appendOctets(self, flowControl: FlowControl, requestData: bytearray) -> bool:
+        finished = super().appendOctets(flowControl, requestData)
 
         if finished:
             pos = 2 if self._hasExtendedLength() else 1
-            self.index = int(self.rawData[pos])
+            self.index = int(self._rawData[pos])
         return finished
 
     def name(self) -> str:
@@ -27,14 +27,14 @@ class ISDURequest_Write8bitIdx(ISDU):
         return {
             'valid': self.isValid,
             'index': str(self.index),
-            'data': self.rawData[2:-1] if self._hasExtendedLength() else self.rawData[1:-1]
+            'data': self._rawData[2:-1] if self._hasExtendedLength() else self._rawData[1:-1]
         }
 
     def dispatch(self, handler):
         return handler.handleISDU(self)
 
     def __str__(self):  # pragma: no cover
-        return f"ISDURequest_Write8bitIdx(index={self.index} data={self.rawData.hex()})"
+        return f"ISDURequest_Write8bitIdx(index={self.index} data={self._rawData.hex()})"
 
 
 class ISDURequest_Write8bitIdxSub(ISDU):
@@ -43,13 +43,13 @@ class ISDURequest_Write8bitIdxSub(ISDU):
         self.index: int = 0
         self.subIndex: int = 0
 
-    def appendOctets(self, flowCtrl: FlowCtrl, requestData: bytearray) -> bool:
-        finished = super().appendOctets(flowCtrl, requestData)
+    def appendOctets(self, flowControl: FlowControl, requestData: bytearray) -> bool:
+        finished = super().appendOctets(flowControl, requestData)
 
         if finished:
             pos = 2 if self._hasExtendedLength() else 1
-            self.index = int(self.rawData[pos])
-            self.subIndex = int(self.rawData[pos + 1])
+            self.index = int(self._rawData[pos])
+            self.subIndex = int(self._rawData[pos + 1])
         return finished
 
     def name(self) -> str:
@@ -60,14 +60,14 @@ class ISDURequest_Write8bitIdxSub(ISDU):
             'valid': self.isValid,
             'index': str(self.index),
             'subIndex': str(self.subIndex),
-            'data': self.rawData[3:-1] if self._hasExtendedLength() else self.rawData[1:-1]
+            'data': self._rawData[3:-1] if self._hasExtendedLength() else self._rawData[1:-1]
         }
 
     def dispatch(self, handler):
         return handler.handleISDU(self)
 
     def __str__(self):  # pragma: no cover
-        return f"ISDURequest_Write8bitIdxSub(index={self.index} subIndex={self.subIndex} data={self.rawData.hex()})"
+        return f"ISDURequest_Write8bitIdxSub(index={self.index} subIndex={self.subIndex} data={self._rawData.hex()})"
 
 
 class ISDURequest_Write16bitIdxSub(ISDU):
@@ -76,13 +76,13 @@ class ISDURequest_Write16bitIdxSub(ISDU):
         self.index: int = 0
         self.subIndex: int = 0
 
-    def appendOctets(self, flowCtrl: FlowCtrl, requestData: bytearray) -> bool:
-        finished = super().appendOctets(flowCtrl, requestData)
+    def appendOctets(self, flowControl: FlowControl, requestData: bytearray) -> bool:
+        finished = super().appendOctets(flowControl, requestData)
 
         if finished:
             pos = 2 if self._hasExtendedLength() else 1
-            self.index = int.from_bytes(self.rawData[pos:pos + 2], byteorder='big')
-            self.subIndex = int(self.rawData[pos + 2])
+            self.index = int.from_bytes(self._rawData[pos:pos + 2], byteorder='big')
+            self.subIndex = int(self._rawData[pos + 2])
         return finished
 
     def name(self) -> str:
@@ -93,14 +93,14 @@ class ISDURequest_Write16bitIdxSub(ISDU):
             'valid': self.isValid,
             'index': str(self.index),
             'subIndex': str(self.subIndex),
-            'data': self.rawData[4:-1] if self._hasExtendedLength() else self.rawData[3:-1]
+            'data': self._rawData[4:-1] if self._hasExtendedLength() else self._rawData[3:-1]
         }
 
     def dispatch(self, handler):
         return handler.handleISDU(self)
 
     def __str__(self):  # pragma: no cover
-        return f"ISDURequest_Write16bitIdxSub(index={self.index} subIndex={self.subIndex} data={self.rawData.hex()})"
+        return f"ISDURequest_Write16bitIdxSub(index={self.index} subIndex={self.subIndex} data={self._rawData.hex()})"
 
 
 #
@@ -112,11 +112,11 @@ class ISDURequest_Read8bitIdx(ISDU):
         super().__init__(iService)
         self.index: int = 0
 
-    def appendOctets(self, flowCtrl: FlowCtrl, requestData: bytearray) -> bool:
-        finished = super().appendOctets(flowCtrl, requestData)
+    def appendOctets(self, flowControl: FlowControl, requestData: bytearray) -> bool:
+        finished = super().appendOctets(flowControl, requestData)
 
         if finished:
-            self.index = int(self.rawData[1])
+            self.index = int(self._rawData[1])
         return finished
 
     def name(self) -> str:
@@ -132,7 +132,7 @@ class ISDURequest_Read8bitIdx(ISDU):
         return handler.handleISDU(self)
 
     def __str__(self):  # pragma: no cover
-        return f"ISDURequest_Read8bitIdx(index={self.index} data={self.rawData.hex()})"
+        return f"ISDURequest_Read8bitIdx(index={self.index} data={self._rawData.hex()})"
 
 
 class ISDURequest_Read8bitIdxSub(ISDU):
@@ -141,12 +141,12 @@ class ISDURequest_Read8bitIdxSub(ISDU):
         self.index: int = 0
         self.subIndex: int = 0
 
-    def appendOctets(self, flowCtrl: FlowCtrl, requestData: bytearray) -> bool:
-        finished = super().appendOctets(flowCtrl, requestData)
+    def appendOctets(self, flowControl: FlowControl, requestData: bytearray) -> bool:
+        finished = super().appendOctets(flowControl, requestData)
 
         if finished:
-            self.index = int(self.rawData[1])
-            self.subIndex = int(self.rawData[2])
+            self.index = int(self._rawData[1])
+            self.subIndex = int(self._rawData[2])
         return finished
 
     def name(self) -> str:
@@ -163,7 +163,7 @@ class ISDURequest_Read8bitIdxSub(ISDU):
         return handler.handleISDU(self)
 
     def __str__(self):  # pragma: no cover
-        return f"ISDURequest_Read8bitIdxSub(index={self.index} subIndex={self.subIndex} data={self.rawData.hex()})"
+        return f"ISDURequest_Read8bitIdxSub(index={self.index} subIndex={self.subIndex} data={self._rawData.hex()})"
 
 
 class ISDURequest_Read16bitIdxSub(ISDU):
@@ -172,12 +172,12 @@ class ISDURequest_Read16bitIdxSub(ISDU):
         self.index: int = 0
         self.subIndex: int = 0
 
-    def appendOctets(self, flowCtrl: FlowCtrl, requestData: bytearray) -> bool:
-        finished = super().appendOctets(flowCtrl, requestData)
+    def appendOctets(self, flowControl: FlowControl, requestData: bytearray) -> bool:
+        finished = super().appendOctets(flowControl, requestData)
 
         if finished:
-            self.index = int.from_bytes(self.rawData[1:2], byteorder='big')
-            self.subIndex = int(self.rawData[3])
+            self.index = int.from_bytes(self._rawData[1:2], byteorder='big')
+            self.subIndex = int(self._rawData[3])
         return finished
 
     def name(self) -> str:
@@ -194,7 +194,7 @@ class ISDURequest_Read16bitIdxSub(ISDU):
         return handler.handleISDU(self)
 
     def __str__(self):  # pragma: no cover
-        return f"ISDURequest_Read16bitIdxSub(index={self.index} subIndex={self.subIndex} data={self.rawData.hex()})"
+        return f"ISDURequest_Read16bitIdxSub(index={self.index} subIndex={self.subIndex} data={self._rawData.hex()})"
 
 
 def createISDURequest(iService: IService):

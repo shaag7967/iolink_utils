@@ -22,8 +22,8 @@ def test_commChannelPage_write():
     channel = CommChannelPage()
 
     masterMsg = MasterMessage()
-    masterMsg.start_time = dt(1999, 1, 2)
-    masterMsg.end_time = dt(2000, 3, 4)
+    masterMsg.startTime = dt(1999, 1, 2)
+    masterMsg.endTime = dt(2000, 3, 4)
     masterMsg.mc.read = 0  # write
     masterMsg.mc.address = 3
     masterMsg.od.append(4)
@@ -31,8 +31,8 @@ def test_commChannelPage_write():
     assert channel.handleMasterMessage(masterMsg) is None
 
     deviceMsg = DeviceMessage()
-    deviceMsg.start_time = dt(2000, 5, 6)
-    deviceMsg.end_time = dt(2001, 7, 8)
+    deviceMsg.startTime = dt(2000, 5, 6)
+    deviceMsg.endTime = dt(2001, 7, 8)
     deviceMsg.od.append(5)
 
     transaction: TransactionPage = channel.handleDeviceMessage(deviceMsg)
@@ -48,16 +48,16 @@ def test_commChannelPage_read():
     channel = CommChannelPage()
 
     masterMsg = MasterMessage()
-    masterMsg.start_time = dt(1999, 1, 2)
-    masterMsg.end_time = dt(2000, 3, 4)
+    masterMsg.startTime = dt(1999, 1, 2)
+    masterMsg.endTime = dt(2000, 3, 4)
     masterMsg.mc.read = 1  # read
     masterMsg.mc.address = 5
 
     assert channel.handleMasterMessage(masterMsg) is None
 
     deviceMsg = DeviceMessage()
-    deviceMsg.start_time = dt(2000, 5, 6)
-    deviceMsg.end_time = dt(2001, 7, 8)
+    deviceMsg.startTime = dt(2000, 5, 6)
+    deviceMsg.endTime = dt(2001, 7, 8)
     deviceMsg.od.append(6)
 
     transaction: TransactionPage = channel.handleDeviceMessage(deviceMsg)
