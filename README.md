@@ -8,7 +8,7 @@
 
 ## Overview protocol decoder/interpreter
 
-![overview_decoder_interpreter.drawio.png](overview_decoder_interpreter.drawio.png)
+![overviewDecoderInterpreter.drawio.png](overviewDecoderInterpreter.drawio.png)
 
 ## Implementation details
 
