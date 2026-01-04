@@ -1,6 +1,9 @@
 from typing import Dict
 from datetime import datetime as dt
 
+import pytest
+
+from iolink_utils.exceptions import InvalidISDUService
 from iolink_utils.octetDecoder.octetDecoder import IService
 from iolink_utils.definitions.iServiceNibble import IServiceNibble
 from iolink_utils.messageInterpreter.isdu.ISDU import ISDU
@@ -8,11 +11,10 @@ from iolink_utils.messageInterpreter.isdu.ISDU import ISDU
 
 # test implementation of abstract class ISDU
 class MyISDU(ISDU):
+    _SERVICE_NIBBLE: IServiceNibble = IServiceNibble.NoService
+
     def _onFinished(self):
         pass
-
-    def name(self) -> str:
-        raise AssertionError("name() not expected to be called in this test")
 
     def data(self) -> Dict:
         raise AssertionError("data() not expected to be called in this test")
@@ -78,6 +80,15 @@ def test_ISDU_appendOctets():
     assert isdu.isComplete
 
 
+def test_ISDU_appendOctets_invalidService():
+    isdu = MyISDU()
+    assert isdu._SERVICE_NIBBLE == IServiceNibble.NoService
+
+    service = IService(service=IServiceNibble.M_ReadReq_8bitIdxSub, length=5)
+    with pytest.raises(InvalidISDUService):
+        isdu.appendOctets(bytearray([int(service), 0x11, 0x22]))
+
+
 def test_ISDU_replaceTrailingOctets():
     isdu = MyISDU()
     isdu.replaceTrailingOctets(bytearray())
@@ -103,4 +114,3 @@ def test_ISDU_dispatch(mocker):
     req.dispatch(handler)
 
     handler.handleISDU.assert_called_once_with(req)
-
