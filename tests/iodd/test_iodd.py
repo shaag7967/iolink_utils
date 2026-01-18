@@ -136,6 +136,6 @@ def test_iodd_noPDIn_noPDOut():
     del my_iodd.processDataDefinition[None]['pdOut']
     assert my_iodd.size_PDout == 0
 
-    my_iodd.physicalLayer.m_sequence_capability = None  # like in IODD V1.0.1
+    my_iodd.physicalLayer.mSequenceCapability = None  # like in IODD V1.0.1
     with pytest.raises(MSequenceCapabilityMissing):
         size_OnRequestData = my_iodd.size_OnRequestData
